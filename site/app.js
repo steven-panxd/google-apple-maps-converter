@@ -4,7 +4,6 @@ import { convert, isShortLink, toAppleMapsUrl } from './lib/index.js';
 // Empty until the worker is deployed; short links then ask the user for the full link.
 const RESOLVER = '';
 const ISSUES = 'https://github.com/steven-panxd/google-apple-maps-converter/issues/new';
-const FIRST_EXAMPLE = document.querySelector('[data-example]')?.getAttribute('data-example') ?? '';
 
 const $ = (id) => /** @type {HTMLElement} */ (document.getElementById(id));
 const input = /** @type {HTMLInputElement} */ ($('link'));
@@ -223,51 +222,25 @@ copyBtn.addEventListener('click', async () => {
   setTimeout(() => (copyBtn.textContent = 'Copy link'), 1600);
 });
 
-// "Paste a link": go to the converter and paste from the clipboard when the browser allows it.
-$('paste').addEventListener('click', async () => {
-  $('convert').scrollIntoView({ block: 'start' });
-  try {
-    const text = await navigator.clipboard.readText();
-    if (extractLink(text ?? '')) {
-      input.value = text;
-      update();
-      return;
-    }
-  } catch {}
-  input.select();
-  input.focus({ preventScroll: true });
-});
-
 for (const btn of document.querySelectorAll('[data-example]')) {
   btn.addEventListener('click', () => {
     input.value = btn.getAttribute('data-example');
     input.scrollLeft = 0;
     update();
-    result.scrollIntoView({ block: 'nearest' });
   });
 }
 
-// Reveal section parts once as they enter, staggered within each section.
-const io = new IntersectionObserver(
-  (entries) => {
-    for (const e of entries) {
-      if (e.isIntersecting) {
-        e.target.classList.add('is-in');
-        io.unobserve(e.target);
-      }
-    }
-  },
-  { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
-);
-for (const section of document.querySelectorAll('section, figure, footer')) {
-  section.querySelectorAll('[data-reveal]').forEach((el, i) => {
-    el.style.setProperty('--n', String(Math.min(i, 6)));
-    io.observe(el);
-  });
-}
+// Star count next to the GitHub button; the button works without it.
+fetch('https://api.github.com/repos/steven-panxd/google-apple-maps-converter')
+  .then((res) => (res.ok ? res.json() : null))
+  .then((repo) => {
+    if (repo && repo.stargazers_count > 0) $('stars').textContent = repo.stargazers_count.toLocaleString('en');
+  })
+  .catch(() => {});
 
 // ?url=<link> shows just the answer; &go=1 jumps straight to the converted map.
-// Without it, the converter starts with a real example so the page shows what it does.
 const params = new URLSearchParams(location.search);
-input.value = params.get('url') || FIRST_EXAMPLE;
-update({ go: params.get('go') === '1' });
+if (params.get('url')) {
+  input.value = params.get('url');
+  update({ go: params.get('go') === '1' });
+}
