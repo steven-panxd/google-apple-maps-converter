@@ -3,6 +3,7 @@
 **Convert Google Maps links to Apple Maps links, and Apple Maps links to Google Maps links.**
 Paste a `google.com/maps` or `maps.app.goo.gl` link and get an Apple Maps link that opens the same place, pin, search or route on iPhone, iPad and Mac. Works the other way too: turn a `maps.apple.com` or `maps.apple/p/…` link into a Google Maps link for friends on Android.
 
+[![GitHub stars](https://img.shields.io/github/stars/steven-panxd/google-apple-maps-converter?style=social)](https://github.com/steven-panxd/google-apple-maps-converter)
 [![npm](https://img.shields.io/npm/v/google-apple-maps-converter)](https://www.npmjs.com/package/google-apple-maps-converter)
 [![license](https://img.shields.io/github/license/steven-panxd/google-apple-maps-converter)](LICENSE)
 ![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
@@ -14,6 +15,8 @@ Paste a `google.com/maps` or `maps.app.goo.gl` link and get an Apple Maps link t
 - 🔑 **No API key**, no tracking, zero dependencies; runs in Node, browsers, Safari extensions and userscripts
 
 **👉 Try it online: [steven-panxd.github.io/google-apple-maps-converter](https://steven-panxd.github.io/google-apple-maps-converter/)**
+
+If it saves you a few taps, please [⭐ star the repo](https://github.com/steven-panxd/google-apple-maps-converter). It helps other people find it.
 
 ## How do I open a Google Maps link in Apple Maps?
 
@@ -56,11 +59,12 @@ npm install google-apple-maps-converter
 
 ```js
 import {
-  convert,            // (url, { to?: 'auto' | 'apple' | 'google', appleFormat?: 'unified' | 'legacy' }) → Promise<{ url, from, to, parsed, resolvedUrl }>
+  convert,            // (url, { to?: 'auto' | 'apple' | 'google', appleFormat?: 'unified' | 'legacy' | 'auto', device? }) → Promise<{ url, from, to, parsed, resolvedUrl }>
   parseMapsUrl,       // (url) → ParsedLink: auto-detects Google or Apple, never throws, no network
   parseGoogleMapsUrl, // (url) → ParsedLink
   parseAppleMapsUrl,  // (url) → ParsedLink
-  toAppleMapsUrl,     // (parsed, { format?: 'unified' | 'legacy' }) → string | null
+  toAppleMapsUrl,     // (parsed, { format?: 'unified' | 'legacy' | 'auto', device? }) → string | null
+  detectAppleLinkFormat, // (device?) → 'unified' | 'legacy': which Apple Maps links this device can open
   toGoogleMapsUrl,    // (parsed) → string | null
   resolveShortLink,   // (url) → Promise<string>: expands maps.app.goo.gl / maps.apple short links
   detectProvider,     // (url) → 'google' | 'apple' | null
@@ -110,7 +114,24 @@ Parsing and building are synchronous and offline. Only `convert` on a short link
 | legacy `?q=…&ll=…`, `?address=…`, `?saddr=…&daddr=…&dirflg=w` | place, search, directions |
 | `maps://` app scheme | same as legacy |
 
-By default Apple Maps links use Apple's [unified Maps URLs](https://developer.apple.com/documentation/mapkit/unified-map-urls) (iOS 18.4+, macOS 15.4+), which support waypoints and cycling. Pass `appleFormat: 'legacy'` for older devices.
+## Which Apple Maps link format?
+
+Apple has two kinds of Maps links:
+
+- **Unified** (`maps.apple.com/place?…`, `/directions?…`): Apple's [current format](https://developer.apple.com/documentation/mapkit/unified-map-urls). Supports waypoints and cycling, but **iPhones before iOS 18.4** (and Macs before macOS 15.4) open Apple Maps and ignore it.
+- **Legacy** (`maps.apple.com/?ll=…&q=…`, `?saddr=…&daddr=…&dirflg=w`): works on every iPhone, Mac and on the web, but can't carry waypoints or cycling.
+
+The default is unified. Pass `'auto'` to pick per device:
+
+```js
+// In a browser: reads navigator.userAgent
+const { url } = await convert(link, { appleFormat: 'auto' });
+
+// On a server: pass the visitor's user agent
+const { url } = await convert(link, { appleFormat: 'auto', device: { userAgent: req.headers['user-agent'] } });
+```
+
+`'auto'` returns unified only when the device is known to handle it (iOS/iPadOS 18.4+, Safari 26 on Mac, and non-Apple devices, which open Apple Maps on the web). Whenever it can't tell — no user agent, a hidden or unusual one, an error reading it — it falls back to legacy, which always opens. iOS 26 Safari freezes its reported version at `18_6`, which still counts as new enough.
 
 ## FAQ
 
@@ -131,6 +152,12 @@ Map zoom isn't part of Apple's unified URLs, and legacy Apple links can't expres
 
 **Can I use it in a web page?**
 Parsing and converting full links works anywhere. Expanding short links from a plain web page is blocked by CORS, so do that in Node, a browser extension, an iOS Shortcut or a small server.
+
+## Support the project
+
+- ⭐ [Star it on GitHub](https://github.com/steven-panxd/google-apple-maps-converter) so other people can find it
+- 🐛 [Report a link that doesn't convert](https://github.com/steven-panxd/google-apple-maps-converter/issues/new?title=Unsupported%20link) (paste the link)
+- 📣 Share the [web converter](https://steven-panxd.github.io/google-apple-maps-converter/) with friends who keep sending Google Maps links to iPhones
 
 ## Roadmap
 

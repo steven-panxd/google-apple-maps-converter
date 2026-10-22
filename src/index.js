@@ -2,11 +2,11 @@
  * google-apple-maps-converter — convert Google Maps links to Apple Maps links and back.
  * Zero dependencies; runs in Node >= 18, browsers, Safari extensions and userscripts.
  */
-import { isAppleMapsURL, isAppleShortURL, parseAppleMapsUrl, toAppleMapsUrl } from './apple.js';
+import { detectAppleLinkFormat, isAppleMapsURL, isAppleShortURL, parseAppleMapsUrl, toAppleMapsUrl } from './apple.js';
 import { isGoogleMapsURL, isGoogleShortURL, parseGoogleMapsUrl, toGoogleMapsUrl } from './google.js';
 import { toURL, unsupported } from './util.js';
 
-export { parseAppleMapsUrl, parseGoogleMapsUrl, toAppleMapsUrl, toGoogleMapsUrl };
+export { detectAppleLinkFormat, parseAppleMapsUrl, parseGoogleMapsUrl, toAppleMapsUrl, toGoogleMapsUrl };
 
 /** @typedef {import('./util.js').ParsedLink} ParsedLink @typedef {'google' | 'apple'} Provider */
 
@@ -81,11 +81,12 @@ export async function resolveShortLink(url, { fetch: fetchImpl = globalThis.fetc
  * `url` is null when the link can't be converted; `parsed.reason` says why.
  *
  * @param {string} input
- * @param {{ to?: Provider | 'auto', appleFormat?: 'unified' | 'legacy', fetch?: typeof fetch, signal?: AbortSignal }} [options]
- *   `to: 'auto'` (default) converts to the other service.
+ * @param {{ to?: Provider | 'auto', appleFormat?: 'unified' | 'legacy' | 'auto', device?: import('./apple.js').Device, fetch?: typeof fetch, signal?: AbortSignal }} [options]
+ *   `to: 'auto'` (default) converts to the other service. `appleFormat: 'auto'` picks the Apple Maps
+ *   link format for `device` (default: this browser), see `detectAppleLinkFormat`.
  * @returns {Promise<{ url: string | null, from: Provider | null, to: Provider, parsed: ParsedLink, resolvedUrl: string }>}
  */
-export async function convert(input, { to = 'auto', appleFormat, ...fetchOptions } = {}) {
+export async function convert(input, { to = 'auto', appleFormat, device, ...fetchOptions } = {}) {
   let resolvedUrl = input.trim();
   const from = detectProvider(resolvedUrl);
   let parsed = parseMapsUrl(resolvedUrl);
@@ -95,7 +96,7 @@ export async function convert(input, { to = 'auto', appleFormat, ...fetchOptions
   }
   /** @type {Provider} */
   const target = to === 'auto' ? (from === 'apple' ? 'google' : 'apple') : to;
-  const url = target === 'apple' ? toAppleMapsUrl(parsed, { format: appleFormat }) : toGoogleMapsUrl(parsed);
+  const url = target === 'apple' ? toAppleMapsUrl(parsed, { format: appleFormat, device }) : toGoogleMapsUrl(parsed);
   return { url, from, to: target, parsed, resolvedUrl };
 }
 

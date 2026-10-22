@@ -15,7 +15,12 @@ import {
   withZoom,
 } from './util.js';
 
-/** @typedef {import('./util.js').ParsedLink} ParsedLink @typedef {import('./util.js').TravelMode} TravelMode */
+/**
+ * @typedef {import('./util.js').ParsedLink} ParsedLink
+ * @typedef {import('./util.js').TravelMode} TravelMode
+ * @typedef {'unified' | 'legacy'} AppleLinkFormat
+ * @typedef {{ userAgent?: string, maxTouchPoints?: number }} Device
+ */
 
 const APPLE_HOST = /^(?:beta\.)?maps\.apple\.com$/i;
 // Labels Apple Maps puts on pins that aren't a named place.
@@ -107,14 +112,58 @@ export function parseAppleMapsUrl(url) {
  * Build an Apple Maps URL from a parsed link. Returns null for `short` / `unsupported`.
  *
  * `format: 'unified'` (default) uses the iOS 18.4+ URLs, which support waypoints and cycling.
- * `format: 'legacy'` uses the old query-string URLs for older devices; it drops waypoints and cycling.
+ * `format: 'legacy'` uses the classic query-string URLs every device understands; it drops waypoints and cycling.
+ * `format: 'auto'` picks one for the device with `detectAppleLinkFormat(device)`.
  *
  * @param {ParsedLink} parsed
- * @param {{ format?: 'unified' | 'legacy' }} [options]
+ * @param {{ format?: AppleLinkFormat | 'auto', device?: Device }} [options]
  * @returns {string | null}
  */
-export function toAppleMapsUrl(parsed, { format = 'unified' } = {}) {
-  return format === 'legacy' ? toLegacy(parsed) : toUnified(parsed);
+export function toAppleMapsUrl(parsed, { format = 'unified', device } = {}) {
+  const chosen = format === 'auto' ? detectAppleLinkFormat(device) : format;
+  return chosen === 'legacy' ? toLegacy(parsed) : toUnified(parsed);
+}
+
+/**
+ * Which Apple Maps link format a device can open.
+ *
+ * The newer links (/place, /directions) need iOS 18.4, iPadOS 18.4 or macOS 15.4; older systems open
+ * Apple Maps but ignore them. Classic links work everywhere but can't carry stops or cycling. So this
+ * returns 'unified' only when the device is known to handle it, and 'legacy' whenever in doubt: no user
+ * agent, a hidden or unusual one, or an error reading it.
+ *
+ * In a browser it reads `navigator` by default; on a server, pass the request's user agent.
+ *
+ * @param {Device} [device] defaults to `globalThis.navigator`
+ * @returns {AppleLinkFormat}
+ */
+export function detectAppleLinkFormat(device = globalThis.navigator) {
+  try {
+    const ua = String(device?.userAgent ?? '');
+    const atLeast = (/** @type {number} */ major, /** @type {number} */ minor, /** @type {number} */ wantMajor, /** @type {number} */ wantMinor) =>
+      major > wantMajor || (major === wantMajor && minor >= wantMinor);
+
+    // iOS 26 Safari reports a frozen "OS 18_6", which still reads as new enough.
+    const ios = /\b(?:iPhone|iPad|iPod)\b.*?\bOS (\d+)_(\d+)/.exec(ua);
+    if (ios) return atLeast(Number(ios[1]), Number(ios[2]), 18, 4) ? 'unified' : 'legacy';
+
+    // Macs, and iPads asking for desktop sites, report a frozen OS version; Safari's own version
+    // follows the system release, so it is the only usable hint. Other Mac browsers give none.
+    if (/\bMacintosh\b/.test(ua)) {
+      const safari = /\bVersion\/(\d+)(?:\.(\d+))?.*\bSafari\//.exec(ua);
+      if (!safari) return 'legacy';
+      const [major, minor] = [Number(safari[1]), Number(safari[2] ?? 0)];
+      const isIPad = Number(device?.maxTouchPoints ?? 0) > 1;
+      if (isIPad) return atLeast(major, minor, 18, 4) ? 'unified' : 'legacy';
+      return major >= 26 ? 'unified' : 'legacy';
+    }
+
+    // Everyone else opens maps.apple.com in the browser, which understands the newer links.
+    if (/\b(?:Android|Windows|Linux|CrOS)\b/.test(ua)) return 'unified';
+    return 'legacy';
+  } catch {
+    return 'legacy';
+  }
 }
 
 // --- internals ---------------------------------------------------------------

@@ -161,7 +161,25 @@ h1 { font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem); font-weight: 700; }
   .answer-map { height: 170px; }
   .focused .answer-actions .button { min-height: 52px; font-size: 1rem; }
 }
-#stars:not(:empty)::before { content: "·"; margin: 0 6px; color: var(--muted); }
+.stars:not(:empty)::before { content: "·"; margin: 0 6px; color: var(--muted); }
+.top nav .star-link { font-weight: 600; }
+
+/* A quiet ask after the converter has helped; dismissible and remembered. */
+.star-ask {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 12px 0 0; padding: 10px 6px 10px 16px;
+  background: var(--tone); border-radius: 8px; font-size: 0.9375rem;
+}
+.star-ask[hidden] { display: none; }
+.star-ask a { font-weight: 600; }
+.star-ask-close {
+  flex: none; width: 36px; height: 36px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--muted); font-size: 1.25rem; line-height: 1; cursor: pointer;
+}
+.star-ask-close:active { background: var(--line); }
+@media (prefers-reduced-motion: no-preference) {
+  .star-ask:not([hidden]) { animation: answer-in 320ms var(--ease-out); }
+}
 
 /* Code */
 pre {

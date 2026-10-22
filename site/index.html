@@ -78,8 +78,8 @@
   <header class="top">
     <a class="name" href="./">Maps Link Converter</a>
     <nav aria-label="Project">
-      <a href="https://github.com/steven-panxd/google-apple-maps-converter">GitHub</a>
       <a href="https://www.npmjs.com/package/google-apple-maps-converter">npm</a>
+      <a class="star-link" href="https://github.com/steven-panxd/google-apple-maps-converter">★ Star<span class="stars"></span></a>
     </nav>
   </header>
 
@@ -122,6 +122,10 @@
           <p class="answer-credit" id="map-credit" hidden>Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</p>
         </div>
       </article>
+      <p class="star-ask" id="star-ask" hidden>
+        <span>Saved you a few taps? <a href="https://github.com/steven-panxd/google-apple-maps-converter" id="star-ask-link">★ Star it on GitHub</a></span>
+        <button type="button" class="star-ask-close" id="star-ask-close" aria-label="Dismiss">×</button>
+      </p>
       <p class="another"><a href="./">Convert another link</a></p>
     </section>
 
@@ -139,7 +143,7 @@
 
 const { url } = await convert('https://maps.app.goo.gl/…');
 // → https://maps.apple.com/place?coordinate=…&amp;name=…</code></pre>
-      <a class="button button-quiet" href="https://github.com/steven-panxd/google-apple-maps-converter">★ Star on GitHub<span id="stars"></span></a>
+      <a class="button button-quiet" href="https://github.com/steven-panxd/google-apple-maps-converter">★ Star on GitHub<span class="stars"></span></a>
     </section>
 
     <section class="faq" id="faq" aria-labelledby="faq-title">
@@ -172,7 +176,7 @@ const { url } = await convert('https://maps.app.goo.gl/…');
   </main>
 
   <footer class="foot">
-    <p>MIT licence · Made by <a href="https://github.com/steven-panxd">Steven Pan</a> · <a href="https://github.com/steven-panxd/google-apple-maps-converter/issues">Report a link that doesn’t convert</a> · Not affiliated with Google or Apple</p>
+    <p><a href="https://github.com/steven-panxd/google-apple-maps-converter">★ Star on GitHub</a> · MIT licence · Made by <a href="https://github.com/steven-panxd">Steven Pan</a> · <a href="https://github.com/steven-panxd/google-apple-maps-converter/issues">Report a link that doesn’t convert</a> · Not affiliated with Google or Apple</p>
   </footer>
 
   <script type="module" src="app.js"></script>

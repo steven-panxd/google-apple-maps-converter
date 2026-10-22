@@ -1,4 +1,4 @@
-import { convert, isShortLink, toAppleMapsUrl } from './lib/index.js';
+import { convert, detectAppleLinkFormat, isShortLink, toAppleMapsUrl } from './lib/index.js';
 
 // Short-link expander (worker/). Short links can't be expanded from a web page because of CORS.
 // Empty until the worker is deployed; short links then ask the user for the full link.
@@ -16,39 +16,8 @@ const urlEl = /** @type {HTMLAnchorElement} */ ($('result-url'));
 const copyBtn = $('copy');
 const note = $('result-note');
 
-/**
- * Which Apple Maps link format this device can open.
- * Apple's newer links (/place, /directions) need iOS 18.4, iPadOS 18.4 or macOS 15.4; older systems open
- * Apple Maps but ignore them. Classic links work everywhere but can't carry stops or cycling.
- * So: the newer format only when the device is known to handle it, the classic one whenever in doubt
- * (no user agent, a hidden or unusual one, or an error reading it).
- */
-export function appleLinkFormat(nav) {
-  try {
-    const ua = String(nav?.userAgent ?? '');
-    const atLeast = (major, minor, wantMajor, wantMinor) => major > wantMajor || (major === wantMajor && minor >= wantMinor);
-
-    const ios = /\b(?:iPhone|iPad|iPod)\b.*?\bOS (\d+)_(\d+)/.exec(ua);
-    if (ios) return atLeast(Number(ios[1]), Number(ios[2]), 18, 4) ? 'unified' : 'legacy';
-
-    // Macs, and iPads asking for desktop sites, report a frozen OS version; Safari's own version
-    // follows the system release, so it is the only usable hint. Other Mac browsers: no hint.
-    if (/\bMacintosh\b/.test(ua)) {
-      const safari = /\bVersion\/(\d+)(?:\.(\d+))?.*\bSafari\//.exec(ua);
-      if (!safari) return 'legacy';
-      const [major, minor] = [Number(safari[1]), Number(safari[2] ?? 0)];
-      const isIPad = Number(nav?.maxTouchPoints ?? 0) > 1;
-      return isIPad ? (atLeast(major, minor, 18, 4) ? 'unified' : 'legacy') : major >= 26 ? 'unified' : 'legacy';
-    }
-
-    // Everyone else opens maps.apple.com in the browser, which understands the newer links.
-    if (/\b(?:Android|Windows|Linux|CrOS)\b/.test(ua)) return 'unified';
-    return 'legacy';
-  } catch {
-    return 'legacy';
-  }
-}
-const APPLE_FORMAT = appleLinkFormat(globalThis.navigator);
+// Classic links on iPhones older than iOS 18.4 or when the device can't be told; see the library.
+const APPLE_FORMAT = detectAppleLinkFormat();
 
 const NAMES = { apple: 'Apple Maps', google: 'Google Maps' };
 const MODES = { driving: 'Driving', walking: 'Walking', transit: 'Transit', bicycling: 'Cycling' };
@@ -261,10 +230,36 @@ input.addEventListener('input', () => {
 });
 input.addEventListener('paste', () => setTimeout(update, 0));
 
+// Ask for a star once the converter has actually helped (the visitor opened or copied a link),
+// never twice on the same device after a dismiss or a click through.
+const starAsk = $('star-ask');
+const STAR_KEY = 'gamc-star-ask';
+function starAskDone() {
+  try {
+    return localStorage.getItem(STAR_KEY) === 'done';
+  } catch {
+    return false;
+  }
+}
+function finishStarAsk() {
+  starAsk.hidden = true;
+  try {
+    localStorage.setItem(STAR_KEY, 'done');
+  } catch {}
+}
+function offerStar() {
+  if (!starAskDone()) starAsk.hidden = false;
+}
+$('star-ask-close').addEventListener('click', finishStarAsk);
+$('star-ask-link').addEventListener('click', finishStarAsk);
+openBtn.addEventListener('click', offerStar);
+if (document.documentElement.classList.contains('focused')) offerStar();
+
 copyBtn.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(openBtn.href);
     copyBtn.textContent = 'Copied';
+    offerStar();
   } catch {
     copyBtn.textContent = 'Copy failed';
   }
@@ -303,7 +298,9 @@ for (const btn of document.querySelectorAll('[data-example]')) {
 fetch('https://api.github.com/repos/steven-panxd/google-apple-maps-converter')
   .then((res) => (res.ok ? res.json() : null))
   .then((repo) => {
-    if (repo && repo.stargazers_count > 0) $('stars').textContent = repo.stargazers_count.toLocaleString('en');
+    if (!repo || !(repo.stargazers_count > 0)) return;
+    const count = repo.stargazers_count.toLocaleString('en');
+    document.querySelectorAll('.stars').forEach((el) => (el.textContent = count));
   })
   .catch(() => {});
 

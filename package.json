@@ -1,6 +1,6 @@
 {
   "name": "google-apple-maps-converter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Convert Google Maps links to Apple Maps links and Apple Maps links to Google Maps. Handles short links (maps.app.goo.gl, maps.apple), places, pins, searches and directions. Zero dependencies.",
   "keywords": [
     "google-maps",
