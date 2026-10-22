@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
   <title>Google Maps to Apple Maps Link Converter (and Apple Maps to Google Maps)</title>
   <meta name="description" content="Free online converter: paste a Google Maps link and open the same place, pin or route in Apple Maps. Also converts Apple Maps links to Google Maps.">
   <link rel="canonical" href="https://steven-panxd.github.io/google-apple-maps-converter/">
@@ -11,8 +12,9 @@
   <meta property="og:description" content="Paste a Google Maps link, open it in Apple Maps. Or the other way around. Places, pins, searches and directions.">
   <meta property="og:url" content="https://steven-panxd.github.io/google-apple-maps-converter/">
   <meta name="twitter:card" content="summary">
-  <meta name="theme-color" content="#f7f9fa">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231f3038'/%3E%3Cpath d='M9 23 L22 10 M12 10 H22 V20' stroke='%23f7f9fa' stroke-width='3.5' fill='none'/%3E%3C/svg%3E">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23111111'/%3E%3Cpath d='M9 23 L22 10 M12 10 H22 V20' stroke='%23ffffff' stroke-width='3.5' fill='none'/%3E%3C/svg%3E">
   <script>
     document.documentElement.classList.add('js');
     if (new URLSearchParams(location.search).get('url')) document.documentElement.classList.add('focused');
@@ -87,12 +89,15 @@
       <p class="lead">Paste a Google Maps link to open the same place, pin or route in Apple Maps, or an Apple Maps link to get one for Google Maps.</p>
 
       <label class="sr-only" for="link">Google Maps or Apple Maps link</label>
-      <input id="link" type="text" inputmode="url" spellcheck="false" autocomplete="off" autocapitalize="off"
-        placeholder="Paste a Google Maps or Apple Maps link">
+      <div class="field">
+        <input id="link" type="text" inputmode="url" enterkeyhint="go" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
+          placeholder="Paste a Google Maps or Apple Maps link">
+        <button type="button" class="button button-quiet" id="paste-btn" hidden>Paste</button>
+      </div>
       <p class="examples">Try:
-        <button type="button" data-example="https://www.google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=!3m1!4b1!4m6!3m5!1s0x47e66e2964e34e2d:0x8ddca9ee380ef7e0!8m2!3d48.8583701!4d2.2944813">a place</button>,
-        <button type="button" data-example="https://www.google.com/maps/dir/Pantheon,+Rome/St.+Peter's+Basilica,+Vatican+City/@41.9,12.47,15z/data=!4m2!4m1!3e2">a walking route</button>,
-        <button type="button" data-example="https://www.google.com/maps/place/60%C2%B023'43.4%22N+5%C2%B019'32.2%22E/@60.3954,5.3256,17z">a dropped pin</button>,
+        <button type="button" data-example="https://www.google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=!3m1!4b1!4m6!3m5!1s0x47e66e2964e34e2d:0x8ddca9ee380ef7e0!8m2!3d48.8583701!4d2.2944813">a place</button><span class="sep">,</span>
+        <button type="button" data-example="https://www.google.com/maps/dir/Pantheon,+Rome/St.+Peter's+Basilica,+Vatican+City/@41.9,12.47,15z/data=!4m2!4m1!3e2">a walking route</button><span class="sep">,</span>
+        <button type="button" data-example="https://www.google.com/maps/place/60%C2%B023'43.4%22N+5%C2%B019'32.2%22E/@60.3954,5.3256,17z">a dropped pin</button><span class="sep">,</span>
         <button type="button" data-example="https://maps.apple.com/place?coordinate=40.758,-73.9855&amp;name=Times%20Square">an Apple Maps link</button>
       </p>
 

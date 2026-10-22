@@ -1,20 +1,47 @@
 :root {
-  --bg: #f7f9fa;
+  color-scheme: light dark;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --tone: #ecf0f2;
-  --ink: #1f3038;
-  --muted: #5d6b72;
-  --accent: #0d7480;
+  --tone: #f2f2f2;
+  --ink: #111111;
+  --muted: #5f5f5f;
+  --accent: #111111;
   --accent-ink: #ffffff;
-  --line: #d5dde1;
+  --accent-hover: #333333;
+  --line: #e4e4e4;
+  --ring: rgba(17, 17, 17, 0.16);
+  --code-bg: #111111;
+  --code-ink: #f2f2f2;
+  --error: #b42318;
+  --map-bg: #e6e6e6;
+  --map-filter: grayscale(1) contrast(1.05);
 
   --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --tone: #1f1f1f;
+    --ink: #ededed;
+    --muted: #a3a3a3;
+    --accent: #ededed;
+    --accent-ink: #0a0a0a;
+    --accent-hover: #cfcfcf;
+    --line: #2a2a2a;
+    --ring: rgba(237, 237, 237, 0.2);
+    --code-bg: #1a1a1a;
+    --code-ink: #ededed;
+    --error: #ff8a80;
+    --map-bg: #1f1f1f;
+    --map-filter: grayscale(1) invert(0.9) contrast(0.9);
+  }
+}
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 body {
   margin: 0;
   background: var(--bg);
@@ -22,20 +49,28 @@ body {
   font: 400 1.0625rem/1.6 var(--font);
 }
 img { display: block; max-width: 100%; height: auto; }
-a { color: var(--accent); text-underline-offset: 0.18em; }
+a { color: var(--ink); text-underline-offset: 0.18em; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 h1, h2 { margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
 code { font: 0.92em/1 var(--mono); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* One column, like a project README. */
-.top, main, .foot { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+/* One column, like a project README. Side padding clears the notch in landscape. */
+.top, main, .foot {
+  max-width: 760px; margin: 0 auto;
+  padding: 0 max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px));
+}
+
+/* Controls fire on tap without the double-tap delay, and long-press doesn't select their labels. */
+button, .button, summary, .top nav a {
+  touch-action: manipulation;
+  -webkit-user-select: none; user-select: none;
+}
 
 .top { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; padding-bottom: 20px; }
 .name { font-weight: 600; color: var(--ink); text-decoration: none; }
 .top nav { display: flex; gap: 20px; }
 .top nav a { color: var(--ink); text-decoration: none; }
-.top nav a:hover { color: var(--accent); }
 
 section { padding: 40px 0; }
 section + section { border-top: 1px solid var(--line); }
@@ -47,33 +82,36 @@ section p { margin: 0 0 16px; }
 h1 { font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem); font-weight: 700; }
 .lead { color: var(--muted); font-size: 1.125rem; margin: 10px 0 24px; max-width: 60ch; }
 
+/* The input and its Paste button share one row. */
+.field { display: flex; gap: 8px; }
 #link {
-  width: 100%;
+  flex: 1; min-width: 0;
+  -webkit-appearance: none; appearance: none;
   padding: 14px 16px;
   font: inherit; font-size: 1.0625rem;
   color: var(--ink); background: var(--surface);
   border: 1px solid var(--line); border-radius: 8px;
 }
-#link:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13, 116, 128, 0.18); }
+#link:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px var(--ring); }
 
 .examples { margin: 10px 0 0; color: var(--muted); font-size: 0.9375rem; }
 .examples button {
   padding: 0; border: 0; background: none; cursor: pointer;
-  font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 0.18em;
+  font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 0.18em;
 }
-.examples button:hover { color: var(--ink); }
+#paste-btn { flex: none; }
 
-.status { min-height: 1.6em; margin: 12px 0 0; color: #a3261c; font-size: 0.9375rem; }
+.status { min-height: 1.6em; margin: 12px 0 0; color: var(--error); font-size: 0.9375rem; }
 
 .answer { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .answer[hidden] { display: none; }
-.answer-map { position: relative; height: 200px; overflow: hidden; background: #e8e4dc; }
+.answer-map { position: relative; height: 200px; overflow: hidden; background: var(--map-bg); }
 .answer-map[hidden] { display: none; }
-.answer-map .tile { position: absolute; width: 256px; height: 256px; max-width: none; }
+.answer-map .tile { position: absolute; width: 256px; height: 256px; max-width: none; filter: var(--map-filter); }
 .answer-pin {
   position: absolute; left: 50%; top: 50%; z-index: 1;
   width: 20px; height: 20px; margin: -10px 0 0 -10px;
-  background: var(--accent); border: 4px solid #fff; border-radius: 50%;
+  background: var(--accent); border: 4px solid var(--surface); border-radius: 50%;
 }
 .answer-body { padding: 20px; }
 .answer-what { font-size: 1.5rem; overflow-wrap: anywhere; }
@@ -95,16 +133,40 @@ h1 { font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem); font-weight: 700; }
   text-decoration: none; cursor: pointer;
   transition: background-color 150ms ease, transform 120ms var(--ease-out);
 }
-.button:active { transform: scale(0.98); }
-.button:hover { background: #0a5f69; border-color: #0a5f69; }
 .button-quiet { background: var(--surface); color: var(--ink); border-color: var(--line); }
-.button-quiet:hover { background: var(--tone); border-color: var(--line); }
+.button:active { transform: scale(0.97); background: var(--accent-hover); border-color: var(--accent-hover); }
+.button-quiet:active { background: var(--tone); border-color: var(--line); }
+
+@media (hover: hover) and (pointer: fine) {
+  .top nav a:hover { color: var(--accent); }
+  .examples button:hover { color: var(--muted); }
+  .button:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .button-quiet:hover { background: var(--tone); border-color: var(--line); }
+}
+
+/* Fingers: example links become tappable chips, answer buttons share the row. */
+@media (pointer: coarse) {
+  .examples { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .examples button {
+    min-height: 40px; padding: 0 14px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+    color: var(--ink); text-decoration: none;
+  }
+  .examples button:active { background: var(--tone); }
+  .examples .sep { display: none; }
+  .faq summary { padding: 6px 0; }
+}
+@media (max-width: 480px) {
+  .answer-actions .button { flex: 1 1 auto; }
+  .answer-map { height: 170px; }
+  .focused .answer-actions .button { min-height: 52px; font-size: 1rem; }
+}
 #stars:not(:empty)::before { content: "·"; margin: 0 6px; color: var(--muted); }
 
 /* Code */
 pre {
   margin: 0 0 12px; padding: 14px 16px;
-  background: var(--ink); color: #e6edf0; border-radius: 8px;
+  background: var(--code-bg); color: var(--code-ink); border-radius: 8px;
   overflow-x: auto;
 }
 pre code { font-size: 0.875rem; line-height: 1.6; }
@@ -116,12 +178,12 @@ pre + .button { margin-top: 8px; }
 .faq summary { cursor: pointer; font-weight: 600; }
 .faq details p { margin: 10px 0 0; color: var(--muted); }
 
-.foot { padding-bottom: 40px; color: var(--muted); font-size: 0.875rem; }
+.foot { padding-bottom: max(40px, env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: 0.875rem; }
 .foot p { margin: 0; padding-top: 24px; border-top: 1px solid var(--line); }
 .foot a { color: var(--muted); }
 
 /* Opened from a link (?url=): only the answer */
-.focused .top, .focused h1, .focused .lead, .focused #link, .focused .examples,
+.focused .top, .focused h1, .focused .lead, .focused .field, .focused .examples,
 .focused main > section:not(.convert), .focused .foot { display: none; }
 .focused .convert { padding-top: 24px; }
 .focused .another { display: block; margin: 16px 0 0; }

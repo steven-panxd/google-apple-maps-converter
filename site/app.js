@@ -89,8 +89,12 @@ function pointOf(parsed) {
   return null;
 }
 
+let mapPoint = null;
+let mapWidth = 0;
+
 /** Lay OpenStreetMap tiles under the pin so the link's coordinates sit at the centre. */
 function drawMap(point) {
+  mapPoint = point;
   map.querySelectorAll('.tile').forEach((t) => t.remove());
   map.hidden = !point;
   mapCredit.hidden = !point;
@@ -100,7 +104,7 @@ function drawMap(point) {
   const lat = (point.lat * Math.PI) / 180;
   const px = ((point.lng + 180) / 360) * n * 256;
   const py = ((1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2) * n * 256;
-  const w = map.clientWidth || 560;
+  const w = (mapWidth = map.clientWidth || 560);
   const h = map.clientHeight || 220;
   const left = px - w / 2;
   const top = py - h / 2;
@@ -117,6 +121,11 @@ function drawMap(point) {
     }
   }
 }
+
+// Redraw when the card changes width (phone rotation, window resize) so the pin stays centred.
+new ResizeObserver(() => {
+  if (mapPoint && !map.hidden && map.clientWidth !== mapWidth) drawMap(mapPoint);
+}).observe(map);
 
 function errorFor(parsed) {
   switch (parsed.reason) {
@@ -220,6 +229,26 @@ copyBtn.addEventListener('click', async () => {
     copyBtn.textContent = 'Copy failed';
   }
   setTimeout(() => (copyBtn.textContent = 'Copy link'), 1600);
+});
+
+// Paste button: on phones, long-press › Paste in a text field is slower than one tap.
+const pasteBtn = $('paste-btn');
+if (navigator.clipboard?.readText) {
+  pasteBtn.hidden = false;
+  pasteBtn.addEventListener('click', async () => {
+    try {
+      input.value = await navigator.clipboard.readText();
+      update();
+    } catch {
+      input.focus();
+    }
+  });
+}
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    input.blur();
+    update();
+  }
 });
 
 for (const btn of document.querySelectorAll('[data-example]')) {
