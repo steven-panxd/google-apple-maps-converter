@@ -1,0 +1,40 @@
+{
+  "name": "google-apple-maps-converter",
+  "version": "0.1.0",
+  "description": "Convert Google Maps links to Apple Maps links and Apple Maps links to Google Maps. Handles short links (maps.app.goo.gl, maps.apple), places, pins, searches and directions. Zero dependencies.",
+  "keywords": [
+    "google-maps",
+    "apple-maps",
+    "google-maps-to-apple-maps",
+    "apple-maps-to-google-maps",
+    "maps-link",
+    "map-url",
+    "converter",
+    "url-parser",
+    "maps-app-goo-gl",
+    "ios",
+    "iphone",
+    "android"
+  ],
+  "author": "Steven Pan (https://pan.xuedo.ng)",
+  "license": "MIT",
+  "homepage": "https://github.com/steven-panxd/google-apple-maps-converter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steven-panxd/google-apple-maps-converter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/steven-panxd/google-apple-maps-converter/issues"
+  },
+  "type": "module",
+  "main": "src/index.js",
+  "exports": "./src/index.js",
+  "files": ["src"],
+  "sideEffects": false,
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
