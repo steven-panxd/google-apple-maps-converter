@@ -11,12 +11,16 @@
   <meta property="og:description" content="Paste a Google Maps link, open it in Apple Maps. Or the other way around. Places, pins, searches and directions.">
   <meta property="og:url" content="https://steven-panxd.github.io/google-apple-maps-converter/">
   <meta name="twitter:card" content="summary">
-  <meta name="theme-color" content="#00643c">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2300643c'/%3E%3Crect x='2.5' y='2.5' width='27' height='27' rx='4' fill='none' stroke='white' stroke-width='1.5'/%3E%3Cpath d='M10 22 L21 11 M13 11 H21 V19' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <script>if (new URLSearchParams(location.search).get('url')) document.documentElement.classList.add('focused');</script>
+  <meta name="theme-color" content="#f7f9fa">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231f3038'/%3E%3Cpath d='M9 23 L22 10 M12 10 H22 V20' stroke='%23f7f9fa' stroke-width='3.5' fill='none'/%3E%3C/svg%3E">
+  <script>
+    document.documentElement.classList.add('js');
+    if (new URLSearchParams(location.search).get('url')) document.documentElement.classList.add('focused');
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 
   <script type="application/ld+json">
   {
@@ -44,322 +48,199 @@
       },
       {
         "@type": "Question",
-        "name": "Can I convert maps.app.goo.gl short links to Apple Maps?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Short links don't contain a location. Open the short link in a browser, copy the full address from the address bar and paste that. The open-source JavaScript library can expand short links automatically." }
-      },
-      {
-        "@type": "Question",
         "name": "How do I convert an Apple Maps link to Google Maps?",
         "acceptedAnswer": { "@type": "Answer", "text": "Paste the maps.apple.com link. The converter detects it and gives you a Google Maps link that works on Android, Windows and in any browser." }
       },
       {
         "@type": "Question",
-        "name": "Why do Google Maps links open in Safari or Google Maps instead of Apple Maps on iPhone?",
+        "name": "Why do Google Maps links open in Safari instead of Apple Maps on iPhone?",
         "acceptedAnswer": { "@type": "Answer", "text": "iOS opens google.com/maps links in the Google Maps app or the browser. Converting the link to maps.apple.com makes it open in Apple Maps." }
       },
       {
         "@type": "Question",
-        "name": "Which Google Maps links can't be converted?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Links that contain only an internal place ID, such as ?cid= links, have no name or coordinates to convert. Open them in a browser and copy the full address from the address bar instead." }
+        "name": "Can I convert maps.app.goo.gl short links to Apple Maps?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes, with the free iPhone shortcut, which expands short links on your phone. On the web page, open the short link in a browser first and paste the full address." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need an app, an account or an API key?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. The converter is a free web page and an optional iPhone shortcut. There is nothing to sign up for." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use the converter from my own app or shortcut?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Open the converter page with ?url= followed by the link, and add &go=1 to jump straight to the converted map. It is also an open-source JavaScript library." }
       }
     ]
   }
   </script>
-
-  <style>
-    :root {
-      --ground: #eef2ef;
-      --surface: #ffffff;
-      --ink: #17221d;
-      --muted: #56635c;
-      --line: #c9d3cd;
-      --sign: #00643c;
-      --sign-ink: #ffffff;
-      --centerline: #f2b705;
-      --water: #2a6f97;
-      --danger: #a3261c;
-      color-scheme: light;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --ground: #101714;
-        --surface: #18211d;
-        --ink: #e6ede9;
-        --muted: #9aa9a1;
-        --line: #2e3a34;
-        --sign: #00703f;
-        --water: #7cb8d9;
-        --danger: #ff8a7a;
-        color-scheme: dark;
-      }
-    }
-
-    * { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
-    body {
-      margin: 0;
-      background: var(--ground);
-      color: var(--ink);
-      font: 400 1.0625rem/1.55 Overpass, system-ui, -apple-system, sans-serif;
-    }
-    a { color: var(--water); text-underline-offset: 3px; }
-    :focus-visible { outline: 3px solid var(--centerline); outline-offset: 2px; }
-
-    .wrap { max-width: 44rem; margin: 0 auto; padding: 0 1rem; }
-
-    /* Road: a dashed centerline runs down the left edge of the converter section. */
-    header.wrap { padding-top: 3.5rem; }
-    h1 {
-      font-weight: 800;
-      font-size: clamp(2.1rem, 6.5vw, 3.4rem);
-      line-height: 1.02;
-      letter-spacing: -0.02em;
-      margin: 0 0 0.9rem;
-      max-width: 15ch;
-    }
-    .lede { margin: 0; color: var(--muted); font-size: 1.15rem; max-width: 34rem; }
-
-    .converter { margin-top: 2.25rem; }
-    label.field-label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
-    .input-row { display: flex; gap: 0.5rem; }
-    textarea {
-      flex: 1;
-      min-width: 0;
-      resize: vertical;
-      min-height: 3.4rem;
-      padding: 0.85rem 1rem;
-      font: inherit;
-      font-size: 1rem;
-      color: var(--ink);
-      background: var(--surface);
-      border: 2px solid var(--line);
-      border-radius: 10px;
-    }
-    textarea:focus { border-color: var(--sign); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--centerline) 70%, transparent); }
-    button {
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      border-radius: 8px;
-      border: 2px solid transparent;
-      padding: 0.6rem 1rem;
-    }
-    .paste-btn { background: var(--surface); color: var(--ink); border-color: var(--line); white-space: nowrap; }
-    .paste-btn:hover { border-color: var(--muted); }
-
-    .examples { margin: 0.7rem 0 0; color: var(--muted); font-size: 0.95rem; }
-    .examples button {
-      background: none; border: 0; padding: 0; color: var(--water);
-      text-decoration: underline; text-underline-offset: 3px; font-weight: 400; font-size: inherit;
-    }
-
-    .status { min-height: 1.6rem; margin: 1rem 0 0; color: var(--muted); }
-    .status.error { color: var(--danger); }
-
-    /* The result is a highway guide sign. */
-    .sign {
-      margin-top: 0.5rem;
-      background: var(--sign);
-      color: var(--sign-ink);
-      border-radius: 14px;
-      padding: 6px;
-      box-shadow: 0 1px 0 rgba(0,0,0,.15), 0 12px 28px -14px rgba(0, 60, 36, .55);
-    }
-    .sign[hidden] { display: none; }
-    .sign-face {
-      border: 2.5px solid var(--sign-ink);
-      border-radius: 10px;
-      padding: 1.1rem 1.25rem 1.25rem;
-    }
-    .sign-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-    .sign-what { font-weight: 800; font-size: clamp(1.45rem, 4.6vw, 2rem); line-height: 1.1; margin: 0; overflow-wrap: anywhere; }
-    .sign-dest { margin: 0.35rem 0 0; font-size: 1.05rem; opacity: 0.9; }
-    .sign-arrow { flex: none; width: 3.2rem; height: 3.2rem; }
-    .sign-more { margin-top: 1rem; font-size: 0.9rem; }
-    .sign-more summary { font-weight: 600; font-size: 0.9rem; opacity: 0.85; }
-    .sign-more[open] summary { margin-bottom: 0.5rem; }
-    .sign-url {
-      display: block;
-      margin: 0;
-      padding: 0.6rem 0.75rem;
-      background: rgba(0,0,0,.18);
-      border-radius: 6px;
-      font-size: 0.9rem;
-      line-height: 1.4;
-      color: var(--sign-ink);
-      overflow-wrap: anywhere;
-      text-decoration: none;
-    }
-    .sign-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
-    .btn-open {
-      background: var(--sign-ink); color: var(--sign);
-      text-decoration: none; display: inline-block; font-weight: 800;
-      border-radius: 8px; padding: 0.65rem 1.1rem;
-    }
-    .btn-copy { background: transparent; color: var(--sign-ink); border-color: rgba(255,255,255,.7); }
-    .btn-copy:hover { border-color: #fff; }
-    .sign-note { margin: 0.6rem 0 0; opacity: 0.85; }
-    .sign .sign-more { border: 0; padding: 0; }
-
-    /* Opened from a link (?url=): just the answer. */
-    .another { display: none; margin: 1.25rem 0 0; }
-    .focused header.wrap, .focused .field-label, .focused .input-row, .focused .examples,
-    .focused main > section:not(.converter), .focused footer.wrap { display: none; }
-    .focused .converter { margin-top: 0; padding-top: 2.5rem; }
-    .focused .another { display: block; }
-
-    main section + section { margin-top: 3rem; }
-    .supported { margin: 1.1rem 0 0; color: var(--muted); }
-    .shortcut-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
-    .shortcut-cta p { margin: 0; flex: 1 1 18rem; color: var(--muted); }
-    .btn-get {
-      display: inline-block; text-decoration: none; font-weight: 800;
-      background: var(--sign); color: var(--sign-ink);
-      border-radius: 8px; padding: 0.7rem 1.15rem;
-    }
-    h2 { font-size: 1.5rem; font-weight: 800; line-height: 1.15; margin: 0 0 1rem; letter-spacing: -0.01em; }
-
-    .steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
-    .steps li {
-      counter-increment: step;
-      position: relative;
-      padding: 0 0 1.1rem 2.75rem;
-    }
-    .steps li::before {
-      content: counter(step);
-      position: absolute; left: 0; top: -0.1rem;
-      width: 1.9rem; height: 1.9rem;
-      display: grid; place-items: center;
-      font-weight: 800;
-      border: 2px solid var(--ink);
-      border-radius: 50%;
-    }
-    /* dashed road between steps */
-    .steps li:not(:last-child)::after {
-      content: "";
-      position: absolute; left: calc(0.95rem - 1px); top: 2rem; bottom: 0.15rem;
-      border-left: 2px dashed var(--centerline);
-    }
-
-    details { border-top: 1px solid var(--line); padding: 0.9rem 0; }
-    details:last-of-type { border-bottom: 1px solid var(--line); }
-    summary { cursor: pointer; font-weight: 600; font-size: 1.05rem; }
-    details p { margin: 0.6rem 0 0; color: var(--muted); }
-
-    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-    th, td { text-align: left; padding: 0.55rem 0.5rem 0.55rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
-    th { font-weight: 600; }
-    td code, p code { font-size: 0.88em; overflow-wrap: anywhere; }
-
-    footer.wrap { margin-top: 4rem; padding-bottom: 3rem; color: var(--muted); font-size: 0.95rem; }
-    footer p { margin: 0.3rem 0; }
-
-    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-    @media (max-width: 30rem) {
-      header.wrap { padding-top: 2.25rem; }
-      .input-row { flex-direction: column; }
-      .paste-btn { align-self: flex-start; }
-      .sign-arrow { width: 2.5rem; height: 2.5rem; }
-    }
-    @media (prefers-reduced-motion: no-preference) {
-      .sign.arrive { animation: arrive 260ms cubic-bezier(.2,.7,.2,1); }
-      @keyframes arrive { from { transform: translateY(6px); opacity: 0; } }
-    }
-  </style>
 </head>
 <body>
-  <header class="wrap">
-    <h1>Open Google Maps links in Apple Maps</h1>
-    <p class="lede">Paste a Google Maps link to open the same place or route in Apple Maps. Works the other way too.</p>
+  <a class="skip" href="#convert">Skip to the converter</a>
+
+  <header class="hero" id="top">
+    <nav class="nav" aria-label="Main">
+      <a class="wordmark" href="./">Maps Link Converter</a>
+      <ul>
+        <li><a href="#convert">Convert</a></li>
+        <li><a href="#iphone">iPhone</a></li>
+        <li><a href="#faq">Questions</a></li>
+        <li><a href="https://github.com/steven-panxd/google-apple-maps-converter">GitHub</a></li>
+      </ul>
+    </nav>
+
+    <h1 class="sentence">
+      <span class="line"><span data-line style="--i:0">Open</span></span>
+      <span class="slot" data-open>
+        <img src="assets/eiffel-1889.jpg" alt="" width="1600" height="1140" fetchpriority="high">
+        <span class="sr-only">Google Maps links</span>
+      </span>
+      <span class="line"><span data-line style="--i:1">in Apple Maps</span></span>
+    </h1>
+
+    <div class="hero-foot">
+      <p class="hero-lead" data-load style="--d:420ms">Paste a Google Maps link and get the same place, pin or route in Apple Maps. It works the other way too, for friends on Android.</p>
+      <button type="button" class="button" id="paste" data-load style="--d:520ms">Paste a link</button>
+    </div>
   </header>
 
-  <main class="wrap">
-    <section class="converter" aria-labelledby="converter-label">
-      <label class="field-label" id="converter-label" for="link">Map link</label>
-      <div class="input-row">
-        <textarea id="link" rows="2" spellcheck="false" autocomplete="off" autocapitalize="off"
-          placeholder="https://maps.app.goo.gl/… or https://maps.apple.com/…"></textarea>
-        <button type="button" class="paste-btn" id="paste">Paste</button>
+  <main>
+    <figure class="window" aria-labelledby="window-caption">
+      <div class="window-frame">
+        <img src="assets/eiffel-1889.jpg" alt="The Eiffel Tower and the Exposition Universelle grounds seen across the Seine, Paris, 1889" width="1600" height="1140">
       </div>
-      <p class="examples">Try an example:
-        <button type="button" data-example="https://www.google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=!3m1!4b1!4m6!3m5!1s0x47e66e2964e34e2d:0x8ddca9ee380ef7e0!8m2!3d48.8583701!4d2.2944813">Google place</button>,
-        <button type="button" data-example="https://www.google.com/maps/dir/Times+Square,+New+York/Central+Park/@40.77,-73.97,14z/data=!4m2!4m1!3e2">Google walking route</button>,
-        <button type="button" data-example="https://maps.apple.com/place?address=1%20Apple%20Park%20Way,%20Cupertino,%20CA&coordinate=37.334859,-122.009040&name=Apple%20Park">Apple Maps place</button>
-      </p>
+      <figcaption id="window-caption" data-reveal>Paris, 1889. A Google Maps link to the Eiffel Tower carries this spot as <strong>48.8583701, 2.2944813</strong>. The converter reads it and hands it to Apple Maps.</figcaption>
+    </figure>
+
+    <section class="convert" id="convert" aria-labelledby="convert-title">
+      <h2 class="convert-title" id="convert-title" data-reveal>Paste any map link</h2>
+      <label class="sr-only" for="link">Google Maps or Apple Maps link</label>
+      <div class="field" data-ui data-reveal>
+        <input id="link" type="text" inputmode="url" spellcheck="false" autocomplete="off" autocapitalize="off"
+          placeholder="maps.google.com/…">
+      </div>
 
       <p class="status" id="status" role="status" aria-live="polite"></p>
 
-      <div class="sign" id="result" hidden>
-        <div class="sign-face">
-          <div class="sign-top">
-            <div>
-              <p class="sign-what" id="result-what"></p>
-              <p class="sign-dest" id="result-dest">in Apple Maps</p>
-            </div>
-            <svg class="sign-arrow" viewBox="0 0 48 48" aria-hidden="true">
-              <path d="M12 36 L34 14 M17 13 H35 V31" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="sign-actions">
-            <a class="btn-open" id="open" href="#">Open in Apple Maps</a>
-            <button type="button" class="btn-copy" id="copy">Copy link</button>
-          </div>
-          <details class="sign-more">
-            <summary>Show link</summary>
-            <a class="sign-url" id="result-url" href="#"></a>
-            <p class="sign-note" id="result-note" hidden></p>
-          </details>
+      <div class="convert-grid">
+      <article class="answer" id="result" data-ui hidden>
+        <div class="answer-map" id="result-map" hidden>
+          <span class="answer-pin" aria-hidden="true"></span>
         </div>
-      </div>
+        <div class="answer-body">
+          <h3 class="answer-what" id="result-what"></h3>
+          <p class="answer-dest" id="result-dest">in Apple Maps</p>
+          <div class="answer-actions">
+            <a class="button" id="open" href="#">Open in Apple Maps</a>
+            <button type="button" class="button button-quiet" id="copy">Copy link</button>
+          </div>
+          <details class="answer-more">
+            <summary>Show the link</summary>
+            <a class="answer-url" id="result-url" href="#"></a>
+            <p class="answer-note" id="result-note" hidden></p>
+          </details>
+          <p class="answer-credit" id="map-credit" hidden>Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</p>
+        </div>
+      </article>
       <p class="another"><a href="./">Convert another link</a></p>
-    </section>
 
-    <section aria-labelledby="iphone">
-      <h2 id="iphone">On iPhone, skip the copy and paste</h2>
-      <div class="shortcut-cta">
-        <p>Add the shortcut, then tap Share › Open in Apple Maps on any Google Maps link.</p>
-        <a class="btn-get" href="Open%20in%20Apple%20Maps.shortcut" download>Get the iPhone shortcut</a>
+      <div class="examples">
+        <h3 class="examples-title" data-reveal>Or try one of these</h3>
+        <ul>
+          <li data-reveal>
+            <button type="button" data-example="https://www.google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=!3m1!4b1!4m6!3m5!1s0x47e66e2964e34e2d:0x8ddca9ee380ef7e0!8m2!3d48.8583701!4d2.2944813">
+              <img src="assets/eiffel-1889.jpg" alt="" width="1600" height="1140">
+              <span>The Eiffel Tower, from a Google place link</span>
+            </button>
+          </li>
+          <li data-reveal>
+            <button type="button" data-example="https://www.google.com/maps/dir/Pantheon,+Rome/St.+Peter's+Basilica,+Vatican+City/@41.9,12.47,15z/data=!4m2!4m1!3e2">
+              <img src="assets/pantheon.jpg" alt="" width="1600" height="1067">
+              <span>The Pantheon to the Vatican, on foot</span>
+            </button>
+          </li>
+          <li data-reveal>
+            <button type="button" data-example="https://maps.apple.com/place?coordinate=40.758,-73.9855&amp;name=Times%20Square">
+              <img src="assets/times-square-1952.jpg" alt="" width="1600" height="1058">
+              <span>Times Square, from Apple Maps to Google</span>
+            </button>
+          </li>
+          <li data-reveal>
+            <button type="button" data-example="https://www.google.com/maps/place/60%C2%B023'43.4%22N+5%C2%B019'32.2%22E/@60.3954,5.3256,17z">
+              <img src="assets/bergen-torget.jpg" alt="" width="1600" height="437">
+              <span>A dropped pin on the harbour in Bergen</span>
+            </button>
+          </li>
+        </ul>
+      </div>
       </div>
     </section>
 
-    <section aria-labelledby="how">
-      <h2 id="how">How to open a Google Maps link in Apple Maps</h2>
-      <ol class="steps">
-        <li>Copy a Google Maps link.</li>
-        <li>Paste it above.</li>
-        <li>Tap Open in Apple Maps.</li>
+    <section class="steps" id="iphone" aria-labelledby="iphone-title">
+      <h2 class="steps-title" id="iphone-title" data-reveal>One tap from Share</h2>
+      <ol class="bar" data-ui>
+        <li class="seg seg-1" data-reveal style="--grow:2">
+          <span class="seg-time">Ten seconds</span>
+          <p>First, add the free shortcut to your iPhone.</p>
+          <a class="button button-on-dark" href="Open%20in%20Apple%20Maps.shortcut" download>Get the iPhone shortcut</a>
+        </li>
+        <li class="seg seg-2" data-reveal style="--grow:1.6">
+          <span class="seg-time">Three taps, once</span>
+          <p>Then allow it to open links the first time it runs.</p>
+        </li>
+        <li class="seg seg-3" data-reveal style="--grow:4">
+          <span class="seg-time">One tap, from then on</span>
+          <p>After that, tap Share › Open in Apple Maps on any Google Maps link, in Safari, Messages, WhatsApp or WeChat. Short links work too.</p>
+        </li>
       </ol>
-      <p class="supported">Works with places, dropped pins, searches and directions, including stops and travel mode.</p>
     </section>
 
-    <section aria-labelledby="faq">
-      <h2 id="faq">Questions</h2>
-      <details>
-        <summary>How do I convert an Apple Maps link to Google Maps?</summary>
-        <p>Paste the <code>maps.apple.com</code> link above. The converter detects it and gives you a Google Maps link that works on Android, Windows and in any browser.</p>
-      </details>
-      <details>
-        <summary>Why do Google Maps links open in Safari instead of Apple Maps on iPhone?</summary>
-        <p>iOS opens <code>google.com/maps</code> links in the Google Maps app or the browser. Converting the link to <code>maps.apple.com</code> makes it open in Apple Maps.</p>
-      </details>
-      <details>
-        <summary>Is my location or link sent anywhere?</summary>
-        <p>No. Links are converted in your browser and never leave your device.</p>
-      </details>
-      <details>
-        <summary>Which links can't be converted?</summary>
-        <p>Short links (<code>maps.app.goo.gl</code>) and links with only a place ID (<code>?cid=</code>). Open them in a browser and paste the full address instead, or use the iPhone shortcut, which handles short links.</p>
-      </details>
-      <details>
-        <summary>Can I use this from an app or shortcut?</summary>
-        <p>Yes. Open this page with <code>?url=</code> and the link, plus <code>&amp;go=1</code> to jump straight to the map. It's also an open-source JavaScript library on <a href="https://github.com/steven-panxd/google-apple-maps-converter">GitHub</a>.</p>
-      </details>
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <h2 class="faq-title" id="faq-title" data-reveal>Things people ask</h2>
+      <div class="faq-list">
+        <details data-reveal>
+          <summary>How do I convert an Apple Maps link to Google Maps?</summary>
+          <p>Paste the <code>maps.apple.com</code> link above. The converter notices it is an Apple link and gives you a Google Maps link that works on Android, Windows and in any browser.</p>
+        </details>
+        <details data-reveal>
+          <summary>Why do Google links open in Safari on my iPhone?</summary>
+          <p>iOS opens <code>google.com/maps</code> links in the Google Maps app or in the browser. Converting the link to <code>maps.apple.com</code> makes it open in Apple Maps instead.</p>
+        </details>
+        <details data-reveal>
+          <summary>Can it open maps.app.goo.gl short links?</summary>
+          <p>Yes, with the iPhone shortcut, which expands short links on your phone. On this page, open the short link in your browser first and paste the full address. Links that only carry a place ID, such as <code>?cid=</code> links, have nothing to convert.</p>
+        </details>
+        <details data-reveal>
+          <summary>Do I need an app, an account or an API key?</summary>
+          <p>No. It is a free web page and an optional shortcut. There is nothing to sign up for and nothing to install from the App Store.</p>
+        </details>
+        <details data-reveal>
+          <summary>Is my link sent anywhere?</summary>
+          <p>No. Links are converted in your browser and never leave your device. The small map preview is loaded from OpenStreetMap.</p>
+        </details>
+        <details data-reveal>
+          <summary>Can I use it from my own app or shortcut?</summary>
+          <p>Yes. Open this page with <code>?url=</code> and the link, and add <code>&amp;go=1</code> to jump straight to the map. It is also an open-source JavaScript library, <a href="https://www.npmjs.com/package/google-apple-maps-converter">google-apple-maps-converter</a> on npm.</p>
+        </details>
+      </div>
     </section>
   </main>
 
-  <footer class="wrap">
-    <p>Free and open source on <a href="https://github.com/steven-panxd/google-apple-maps-converter">GitHub</a>. Not affiliated with Google or Apple.</p>
+  <footer class="footer" aria-labelledby="footer-title">
+    <div class="footer-notes">
+      <p>Maps Link Converter is free and open source, made by Steven Pan.</p>
+      <p>No account, no API key, no tracking.</p>
+      <p>Not affiliated with Google or Apple.</p>
+      <a class="footer-top" href="#top">Back to top</a>
+    </div>
+    <h2 class="sr-only" id="footer-title">Get in touch</h2>
+    <a class="footer-line" href="https://github.com/steven-panxd/google-apple-maps-converter">github.com/<wbr>steven-panxd</a>
+    <p class="credits">Pictures: <a href="https://commons.wikimedia.org/wiki/File:Eiffel_tower_at_Exposition_Universelle,_Paris,_1889.jpg">“Eiffel tower at Exposition Universelle, Paris, 1889”</a> by Neurdein, <a href="https://creativecommons.org/publicdomain/mark/1.0/">public domain</a>; <a href="https://commons.wikimedia.org/wiki/File:Rome_(IT),_Pantheon_--_2013_--_3572.jpg">“Rome (IT), Pantheon”</a> by Dietmar Rabich, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>; <a href="https://commons.wikimedia.org/wiki/File:(Times_Square_street_scene)_(LOC).jpg">“Times Square street scene”</a> by Angelo Rizzuto, The Library of Congress, <a href="https://www.flickr.com/commons/usage/">no known copyright restrictions</a>; <a href="https://commons.wikimedia.org/wiki/File:Bergen_-_Torget_panorama.jpg">“Bergen, Torget panorama”</a> by Pudelek (Marcin Szala), <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a>; all via Wikimedia Commons. Map previews © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.</p>
+    <div class="footer-meta">
+      <p><a href="https://www.npmjs.com/package/google-apple-maps-converter">npm package</a> <a href="https://github.com/steven-panxd/google-apple-maps-converter/issues">Report a link that doesn’t convert</a></p>
+      <p>MIT licence</p>
+      <p>2026</p>
+    </div>
   </footer>
 
   <script type="module" src="app.js"></script>

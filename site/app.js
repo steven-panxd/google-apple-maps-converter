@@ -4,11 +4,14 @@ import { convert, isShortLink, toAppleMapsUrl } from './lib/index.js';
 // Empty until the worker is deployed; short links then ask the user for the full link.
 const RESOLVER = '';
 const ISSUES = 'https://github.com/steven-panxd/google-apple-maps-converter/issues/new';
+const FIRST_EXAMPLE = document.querySelector('[data-example]')?.getAttribute('data-example') ?? '';
 
 const $ = (id) => /** @type {HTMLElement} */ (document.getElementById(id));
-const input = /** @type {HTMLTextAreaElement} */ ($('link'));
+const input = /** @type {HTMLInputElement} */ ($('link'));
 const status = $('status');
 const result = $('result');
+const map = $('result-map');
+const mapCredit = $('map-credit');
 const openBtn = /** @type {HTMLAnchorElement} */ ($('open'));
 const urlEl = /** @type {HTMLAnchorElement} */ ($('result-url'));
 const copyBtn = $('copy');
@@ -17,23 +20,16 @@ const note = $('result-note');
 const NAMES = { apple: 'Apple Maps', google: 'Google Maps' };
 const MODES = { driving: 'Driving', walking: 'Walking', transit: 'Transit', bicycling: 'Cycling' };
 
-/** Second line on the sign, e.g. "Walking directions in Apple Maps, 2 stops". */
-function subtitle(parsed, target) {
-  if (parsed.kind !== 'directions') return `in ${target}`;
-  const mode = parsed.travelMode ? `${MODES[parsed.travelMode]} directions` : 'Directions';
-  const stops = parsed.waypoints.length;
-  return `${mode} in ${target}${stops ? `, ${stops} stop${stops > 1 ? 's' : ''}` : ''}`;
-}
-
 let run = 0;
 
 /** Pull the first map link out of pasted text like "Meet here: https://maps.app.goo.gl/abc". */
 function extractLink(text) {
+  // Quotes stay inside the match: links carry them in names (St. Peter's) and pins (48°51'30"N).
   const m =
-    text.match(/(?:https?:\/\/|maps:\/*|comgooglemaps:\/\/)[^\s<>"']+/i) ??
-    text.match(/(?:maps\.app\.goo\.gl|goo\.gl\/maps|maps\.apple(?:\.com)?\/|(?:www\.)?google\.[a-z.]+\/maps)[^\s<>"']*/i);
+    text.match(/(?:https?:\/\/|maps:\/*|comgooglemaps:\/\/)[^\s<>]+/i) ??
+    text.match(/(?:maps\.app\.goo\.gl|goo\.gl\/maps|maps\.apple(?:\.com)?\/|(?:www\.)?google\.[a-z.]+\/maps)[^\s<>]*/i);
   if (!m) return null;
-  const link = m[0].replace(/[.,;!?)]+$/, '');
+  const link = m[0].replace(/[.,;!?)"'”’]+$/, '');
   // EU visitors may land on consent.google.com?continue=<real link> after a short link.
   try {
     const u = new URL(link);
@@ -66,13 +62,60 @@ function describe(parsed) {
     case 'place':
       return parsed.name;
     case 'coords':
-      return `Pin at ${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`;
+      return `${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`;
     case 'search':
-      return parsed.near ? `Search for “${parsed.query}” in the same area` : `Search for “${parsed.query}”`;
+      return `“${parsed.query}”`;
     case 'directions':
       return `${fmtLoc(parsed.origin)} → ${fmtLoc(parsed.destination)}`;
     default:
       return '';
+  }
+}
+
+/** Second line under the place, e.g. "Walking directions in Apple Maps, 2 stops". */
+function subtitle(parsed, target) {
+  if (parsed.kind === 'coords') return `A dropped pin in ${target}`;
+  if (parsed.kind === 'search') return `A search in ${target}`;
+  if (parsed.kind !== 'directions') return `in ${target}`;
+  const mode = parsed.travelMode ? `${MODES[parsed.travelMode]} directions` : 'Directions';
+  const stops = parsed.waypoints.length;
+  return `${mode} in ${target}${stops ? `, ${stops} stop${stops > 1 ? 's' : ''}` : ''}`;
+}
+
+/** The point a link is about, if it has one. */
+function pointOf(parsed) {
+  if ((parsed.kind === 'place' || parsed.kind === 'coords') && parsed.lat !== undefined) return parsed;
+  if (parsed.kind === 'search' && parsed.near) return parsed.near;
+  if (parsed.kind === 'directions' && parsed.destination && 'lat' in parsed.destination) return parsed.destination;
+  return null;
+}
+
+/** Lay OpenStreetMap tiles under the pin so the link's coordinates sit at the centre. */
+function drawMap(point) {
+  map.querySelectorAll('.tile').forEach((t) => t.remove());
+  map.hidden = !point;
+  mapCredit.hidden = !point;
+  if (!point) return;
+  const zoom = 16;
+  const n = 2 ** zoom;
+  const lat = (point.lat * Math.PI) / 180;
+  const px = ((point.lng + 180) / 360) * n * 256;
+  const py = ((1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2) * n * 256;
+  const w = map.clientWidth || 560;
+  const h = map.clientHeight || 220;
+  const left = px - w / 2;
+  const top = py - h / 2;
+  for (let ty = Math.floor(top / 256); ty <= Math.floor((top + h) / 256); ty++) {
+    for (let tx = Math.floor(left / 256); tx <= Math.floor((left + w) / 256); tx++) {
+      if (ty < 0 || ty >= n) continue;
+      const img = document.createElement('img');
+      img.className = 'tile';
+      img.alt = '';
+      img.src = `https://tile.openstreetmap.org/${zoom}/${((tx % n) + n) % n}/${ty}.png`;
+      img.style.left = `${Math.round(tx * 256 - left)}px`;
+      img.style.top = `${Math.round(ty * 256 - top)}px`;
+      map.append(img);
+    }
   }
 }
 
@@ -109,7 +152,7 @@ async function update({ go = false } = {}) {
 
   const short = isShortLink(link);
   if (short && !RESOLVER) {
-    return showError('Short links can’t be expanded here yet. Open the link in your browser, then paste the full address from the address bar.');
+    return showError('Short links can’t be expanded here yet. Open the link in your browser, then paste the full address from the address bar. The iPhone shortcut below handles short links.');
   }
   if (short) setStatus('Expanding the short link…');
 
@@ -139,8 +182,8 @@ async function update({ go = false } = {}) {
   }
 
   const target = NAMES[r.to];
-  $('result-dest').textContent = subtitle(r.parsed, target);
   $('result-what').textContent = describe(r.parsed);
+  $('result-dest').textContent = subtitle(r.parsed, target);
   urlEl.textContent = r.url;
   urlEl.href = openBtn.href = r.url;
   openBtn.textContent = `Open in ${target}`;
@@ -149,16 +192,13 @@ async function update({ go = false } = {}) {
   const legacy = r.to === 'apple' ? toAppleMapsUrl(r.parsed, { format: 'legacy' }) : null;
   note.hidden = !legacy;
   if (legacy) {
-    note.innerHTML = '';
-    note.append('On iOS older than 18.4? Use the ');
-    const a = Object.assign(document.createElement('a'), { href: legacy, textContent: 'classic Apple Maps link' });
-    a.style.color = 'inherit';
-    note.append(a, '.');
+    note.replaceChildren('On iOS older than 18.4? Use the ', Object.assign(document.createElement('a'), { href: legacy, textContent: 'classic Apple Maps link' }), '.');
   }
 
   setStatus('');
   const wasHidden = result.hidden;
   result.hidden = false;
+  drawMap(pointOf(r.parsed));
   if (wasHidden) {
     result.classList.remove('arrive');
     void result.offsetWidth;
@@ -183,30 +223,51 @@ copyBtn.addEventListener('click', async () => {
   setTimeout(() => (copyBtn.textContent = 'Copy link'), 1600);
 });
 
-const pasteBtn = $('paste');
-if (navigator.clipboard?.readText) {
-  pasteBtn.addEventListener('click', async () => {
-    try {
-      input.value = await navigator.clipboard.readText();
+// "Paste a link": go to the converter and paste from the clipboard when the browser allows it.
+$('paste').addEventListener('click', async () => {
+  $('convert').scrollIntoView({ block: 'start' });
+  try {
+    const text = await navigator.clipboard.readText();
+    if (extractLink(text ?? '')) {
+      input.value = text;
       update();
-    } catch {
-      input.focus();
+      return;
     }
-  });
-} else {
-  pasteBtn.hidden = true;
-}
+  } catch {}
+  input.select();
+  input.focus({ preventScroll: true });
+});
 
 for (const btn of document.querySelectorAll('[data-example]')) {
   btn.addEventListener('click', () => {
     input.value = btn.getAttribute('data-example');
+    input.scrollLeft = 0;
     update();
+    result.scrollIntoView({ block: 'nearest' });
   });
 }
 
-// ?url=<link> pre-fills the converter; &go=1 jumps straight to the converted map.
-const params = new URLSearchParams(location.search);
-if (params.get('url')) {
-  input.value = params.get('url');
-  update({ go: params.get('go') === '1' });
+// Reveal section parts once as they enter, staggered within each section.
+const io = new IntersectionObserver(
+  (entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        e.target.classList.add('is-in');
+        io.unobserve(e.target);
+      }
+    }
+  },
+  { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
+);
+for (const section of document.querySelectorAll('section, figure, footer')) {
+  section.querySelectorAll('[data-reveal]').forEach((el, i) => {
+    el.style.setProperty('--n', String(Math.min(i, 6)));
+    io.observe(el);
+  });
 }
+
+// ?url=<link> shows just the answer; &go=1 jumps straight to the converted map.
+// Without it, the converter starts with a real example so the page shows what it does.
+const params = new URLSearchParams(location.search);
+input.value = params.get('url') || FIRST_EXAMPLE;
+update({ go: params.get('go') === '1' });
