@@ -16,6 +16,19 @@ const urlEl = /** @type {HTMLAnchorElement} */ ($('result-url'));
 const copyBtn = $('copy');
 const note = $('result-note');
 
+/**
+ * Apple's newer map links (/place, /directions) need iOS 18.4 or later; older iPhones open Apple Maps
+ * but ignore them. Those get the classic links instead. iOS 26 Safari reports a frozen "OS 18_6",
+ * which still reads as new enough. Anything that isn't an iPhone or iPad gets the newer links.
+ */
+export function needsClassicAppleLinks(ua) {
+  const m = /\b(?:iPhone|iPad|iPod)\b.*?\bOS (\d+)_(\d+)/.exec(ua);
+  if (!m) return false;
+  const [major, minor] = [Number(m[1]), Number(m[2])];
+  return major < 18 || (major === 18 && minor < 4);
+}
+const APPLE_FORMAT = needsClassicAppleLinks(navigator.userAgent) ? 'legacy' : 'unified';
+
 const NAMES = { apple: 'Apple Maps', google: 'Google Maps' };
 const MODES = { driving: 'Driving', walking: 'Walking', transit: 'Transit', bicycling: 'Cycling' };
 
@@ -166,7 +179,7 @@ async function update({ go = false } = {}) {
 
   let r;
   try {
-    r = await convert(link, { fetch: viaResolver });
+    r = await convert(link, { fetch: viaResolver, appleFormat: APPLE_FORMAT });
   } catch {
     if (id !== run) return;
     return showError('Couldn’t expand this short link. Open it in your browser, then paste the full address from the address bar.');
@@ -197,10 +210,17 @@ async function update({ go = false } = {}) {
   openBtn.textContent = `Open in ${target}`;
   copyBtn.textContent = 'Copy link';
 
-  const legacy = r.to === 'apple' ? toAppleMapsUrl(r.parsed, { format: 'legacy' }) : null;
-  note.hidden = !legacy;
-  if (legacy) {
+  const lostOnOldIOS =
+    r.parsed.kind === 'directions' && (r.parsed.waypoints.length > 0 || r.parsed.travelMode === 'bicycling');
+  if (r.to === 'apple' && APPLE_FORMAT === 'legacy' && lostOnOldIOS) {
+    note.hidden = false;
+    note.textContent = 'Stops and cycling need iOS 18.4 or later, so this link opens the route without them.';
+  } else if (r.to === 'apple' && APPLE_FORMAT === 'unified') {
+    note.hidden = false;
+    const legacy = toAppleMapsUrl(r.parsed, { format: 'legacy' });
     note.replaceChildren('On iOS older than 18.4? Use the ', Object.assign(document.createElement('a'), { href: legacy, textContent: 'classic Apple Maps link' }), '.');
+  } else {
+    note.hidden = true;
   }
 
   setStatus('');
