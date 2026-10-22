@@ -17,17 +17,38 @@ const copyBtn = $('copy');
 const note = $('result-note');
 
 /**
- * Apple's newer map links (/place, /directions) need iOS 18.4 or later; older iPhones open Apple Maps
- * but ignore them. Those get the classic links instead. iOS 26 Safari reports a frozen "OS 18_6",
- * which still reads as new enough. Anything that isn't an iPhone or iPad gets the newer links.
+ * Which Apple Maps link format this device can open.
+ * Apple's newer links (/place, /directions) need iOS 18.4, iPadOS 18.4 or macOS 15.4; older systems open
+ * Apple Maps but ignore them. Classic links work everywhere but can't carry stops or cycling.
+ * So: the newer format only when the device is known to handle it, the classic one whenever in doubt
+ * (no user agent, a hidden or unusual one, or an error reading it).
  */
-export function needsClassicAppleLinks(ua) {
-  const m = /\b(?:iPhone|iPad|iPod)\b.*?\bOS (\d+)_(\d+)/.exec(ua);
-  if (!m) return false;
-  const [major, minor] = [Number(m[1]), Number(m[2])];
-  return major < 18 || (major === 18 && minor < 4);
+export function appleLinkFormat(nav) {
+  try {
+    const ua = String(nav?.userAgent ?? '');
+    const atLeast = (major, minor, wantMajor, wantMinor) => major > wantMajor || (major === wantMajor && minor >= wantMinor);
+
+    const ios = /\b(?:iPhone|iPad|iPod)\b.*?\bOS (\d+)_(\d+)/.exec(ua);
+    if (ios) return atLeast(Number(ios[1]), Number(ios[2]), 18, 4) ? 'unified' : 'legacy';
+
+    // Macs, and iPads asking for desktop sites, report a frozen OS version; Safari's own version
+    // follows the system release, so it is the only usable hint. Other Mac browsers: no hint.
+    if (/\bMacintosh\b/.test(ua)) {
+      const safari = /\bVersion\/(\d+)(?:\.(\d+))?.*\bSafari\//.exec(ua);
+      if (!safari) return 'legacy';
+      const [major, minor] = [Number(safari[1]), Number(safari[2] ?? 0)];
+      const isIPad = Number(nav?.maxTouchPoints ?? 0) > 1;
+      return isIPad ? (atLeast(major, minor, 18, 4) ? 'unified' : 'legacy') : major >= 26 ? 'unified' : 'legacy';
+    }
+
+    // Everyone else opens maps.apple.com in the browser, which understands the newer links.
+    if (/\b(?:Android|Windows|Linux|CrOS)\b/.test(ua)) return 'unified';
+    return 'legacy';
+  } catch {
+    return 'legacy';
+  }
 }
-const APPLE_FORMAT = needsClassicAppleLinks(navigator.userAgent) ? 'legacy' : 'unified';
+const APPLE_FORMAT = appleLinkFormat(globalThis.navigator);
 
 const NAMES = { apple: 'Apple Maps', google: 'Google Maps' };
 const MODES = { driving: 'Driving', walking: 'Walking', transit: 'Transit', bicycling: 'Cycling' };
@@ -210,17 +231,16 @@ async function update({ go = false } = {}) {
   openBtn.textContent = `Open in ${target}`;
   copyBtn.textContent = 'Copy link';
 
-  const lostOnOldIOS =
-    r.parsed.kind === 'directions' && (r.parsed.waypoints.length > 0 || r.parsed.travelMode === 'bicycling');
-  if (r.to === 'apple' && APPLE_FORMAT === 'legacy' && lostOnOldIOS) {
-    note.hidden = false;
-    note.textContent = 'Stops and cycling need iOS 18.4 or later, so this link opens the route without them.';
-  } else if (r.to === 'apple' && APPLE_FORMAT === 'unified') {
-    note.hidden = false;
-    const legacy = toAppleMapsUrl(r.parsed, { format: 'legacy' });
-    note.replaceChildren('On iOS older than 18.4? Use the ', Object.assign(document.createElement('a'), { href: legacy, textContent: 'classic Apple Maps link' }), '.');
-  } else {
-    note.hidden = true;
+  // Whichever format was chosen, offer the other one in case the guess about this device was wrong.
+  const lost = r.parsed.kind === 'directions' && (r.parsed.waypoints.length > 0 || r.parsed.travelMode === 'bicycling');
+  note.hidden = r.to !== 'apple';
+  if (r.to === 'apple' && APPLE_FORMAT === 'legacy') {
+    const newer = toAppleMapsUrl(r.parsed, { format: 'unified' });
+    const lead = lost ? 'Stops and cycling need iOS 18.4 or later.' : 'This link works on every iPhone.';
+    note.replaceChildren(`${lead} On iOS 18.4 or later you can also use the `, Object.assign(document.createElement('a'), { href: newer, textContent: 'newer Apple Maps link' }), '.');
+  } else if (r.to === 'apple') {
+    const classic = toAppleMapsUrl(r.parsed, { format: 'legacy' });
+    note.replaceChildren('If Apple Maps opens without the place or route, use the ', Object.assign(document.createElement('a'), { href: classic, textContent: 'classic Apple Maps link' }), '.');
   }
 
   setStatus('');
