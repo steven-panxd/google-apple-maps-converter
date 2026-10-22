@@ -44,7 +44,7 @@ const { url } = await convert('https://maps.apple/p/U8rE9v8n8iVZjr');
 
 Open Google Maps links in Apple Maps straight from the share sheet:
 
-1. On your iPhone, open **[the shortcut on iCloud](https://www.icloud.com/shortcuts/b1a5950bead74784bb03ffd78e2779ea)** and tap **Add Shortcut**.
+1. On your iPhone, open **[the shortcut on iCloud](https://www.icloud.com/shortcuts/37ce6677367a4426b64d2e6b4238278b)** and tap **Add Shortcut**.
 2. On any Google Maps link (Safari, Messages, WhatsApp, WeChat…), tap **Share → Open in Apple Maps**. Run it from the Shortcuts app to convert the link on your clipboard.
 
 The shortcut expands short links on your phone and hands the full link to the web converter, which opens Apple Maps. Rebuild it with `python3 shortcut/build.py` on a Mac.
