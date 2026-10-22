@@ -17,6 +17,14 @@ const note = $('result-note');
 const NAMES = { apple: 'Apple Maps', google: 'Google Maps' };
 const MODES = { driving: 'Driving', walking: 'Walking', transit: 'Transit', bicycling: 'Cycling' };
 
+/** Second line on the sign, e.g. "Walking directions in Apple Maps, 2 stops". */
+function subtitle(parsed, target) {
+  if (parsed.kind !== 'directions') return `in ${target}`;
+  const mode = parsed.travelMode ? `${MODES[parsed.travelMode]} directions` : 'Directions';
+  const stops = parsed.waypoints.length;
+  return `${mode} in ${target}${stops ? `, ${stops} stop${stops > 1 ? 's' : ''}` : ''}`;
+}
+
 let run = 0;
 
 /** Pull the first map link out of pasted text like "Meet here: https://maps.app.goo.gl/abc". */
@@ -49,24 +57,20 @@ function setStatus(text, { error = false, html = false } = {}) {
 }
 
 function fmtLoc(loc) {
-  if (!loc) return 'your location';
+  if (!loc) return 'Your location';
   return 'query' in loc ? loc.query : `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
 }
 
 function describe(parsed) {
   switch (parsed.kind) {
     case 'place':
-      return parsed.address ? `${parsed.name}, ${parsed.address}` : parsed.name;
+      return parsed.name;
     case 'coords':
       return `Pin at ${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`;
     case 'search':
       return parsed.near ? `Search for “${parsed.query}” in the same area` : `Search for “${parsed.query}”`;
-    case 'directions': {
-      const stops = parsed.waypoints.length;
-      const mode = parsed.travelMode ? `${MODES[parsed.travelMode]} directions` : 'Directions';
-      const via = stops ? `, ${stops} stop${stops > 1 ? 's' : ''}` : '';
-      return `${mode} from ${fmtLoc(parsed.origin)} to ${fmtLoc(parsed.destination)}${via}`;
-    }
+    case 'directions':
+      return `${fmtLoc(parsed.origin)} → ${fmtLoc(parsed.destination)}`;
     default:
       return '';
   }
@@ -135,7 +139,7 @@ async function update({ go = false } = {}) {
   }
 
   const target = NAMES[r.to];
-  $('result-dest').textContent = target;
+  $('result-dest').textContent = subtitle(r.parsed, target);
   $('result-what').textContent = describe(r.parsed);
   urlEl.textContent = r.url;
   urlEl.href = openBtn.href = r.url;
@@ -152,7 +156,7 @@ async function update({ go = false } = {}) {
     note.append(a, '.');
   }
 
-  setStatus(`${NAMES[r.from]} link detected${short ? ', short link expanded' : ''}.`);
+  setStatus('');
   const wasHidden = result.hidden;
   result.hidden = false;
   if (wasHidden) {

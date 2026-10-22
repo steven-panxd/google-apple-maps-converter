@@ -13,6 +13,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="theme-color" content="#00643c">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2300643c'/%3E%3Crect x='2.5' y='2.5' width='27' height='27' rx='4' fill='none' stroke='white' stroke-width='1.5'/%3E%3Cpath d='M10 22 L21 11 M13 11 H21 V19' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>if (new URLSearchParams(location.search).get('url')) document.documentElement.classList.add('focused');</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap" rel="stylesheet">
@@ -171,12 +172,15 @@
       padding: 1.1rem 1.25rem 1.25rem;
     }
     .sign-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-    .sign-dest { font-weight: 800; font-size: clamp(1.6rem, 5vw, 2.2rem); line-height: 1.05; margin: 0; }
-    .sign-what { margin: 0.35rem 0 0; font-size: 1.05rem; opacity: 0.92; overflow-wrap: anywhere; }
+    .sign-what { font-weight: 800; font-size: clamp(1.45rem, 4.6vw, 2rem); line-height: 1.1; margin: 0; overflow-wrap: anywhere; }
+    .sign-dest { margin: 0.35rem 0 0; font-size: 1.05rem; opacity: 0.9; }
     .sign-arrow { flex: none; width: 3.2rem; height: 3.2rem; }
+    .sign-more { margin-top: 1rem; font-size: 0.9rem; }
+    .sign-more summary { font-weight: 600; font-size: 0.9rem; opacity: 0.85; }
+    .sign-more[open] summary { margin-bottom: 0.5rem; }
     .sign-url {
       display: block;
-      margin: 1rem 0 0;
+      margin: 0;
       padding: 0.6rem 0.75rem;
       background: rgba(0,0,0,.18);
       border-radius: 6px;
@@ -194,9 +198,18 @@
     }
     .btn-copy { background: transparent; color: var(--sign-ink); border-color: rgba(255,255,255,.7); }
     .btn-copy:hover { border-color: #fff; }
-    .sign-note { margin: 0.8rem 0 0; font-size: 0.9rem; opacity: 0.85; }
+    .sign-note { margin: 0.6rem 0 0; opacity: 0.85; }
+    .sign .sign-more { border: 0; padding: 0; }
 
-    main section + section { margin-top: 3.5rem; }
+    /* Opened from a link (?url=): just the answer. */
+    .another { display: none; margin: 1.25rem 0 0; }
+    .focused header.wrap, .focused .field-label, .focused .input-row, .focused .examples,
+    .focused main > section:not(.converter), .focused footer.wrap { display: none; }
+    .focused .converter { margin-top: 0; padding-top: 2.5rem; }
+    .focused .another { display: block; }
+
+    main section + section { margin-top: 3rem; }
+    .supported { margin: 1.1rem 0 0; color: var(--muted); }
     .shortcut-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
     .shortcut-cta p { margin: 0; flex: 1 1 18rem; color: var(--muted); }
     .btn-get {
@@ -258,7 +271,7 @@
 <body>
   <header class="wrap">
     <h1>Open Google Maps links in Apple Maps</h1>
-    <p class="lede">Paste a Google Maps link and get the same place, pin or route in Apple Maps. Works the other way too, for friends on Android.</p>
+    <p class="lede">Paste a Google Maps link to open the same place or route in Apple Maps. Works the other way too.</p>
   </header>
 
   <main class="wrap">
@@ -281,27 +294,31 @@
         <div class="sign-face">
           <div class="sign-top">
             <div>
-              <p class="sign-dest" id="result-dest">Apple Maps</p>
               <p class="sign-what" id="result-what"></p>
+              <p class="sign-dest" id="result-dest">in Apple Maps</p>
             </div>
             <svg class="sign-arrow" viewBox="0 0 48 48" aria-hidden="true">
               <path d="M12 36 L34 14 M17 13 H35 V31" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <a class="sign-url" id="result-url" href="#"></a>
           <div class="sign-actions">
             <a class="btn-open" id="open" href="#">Open in Apple Maps</a>
             <button type="button" class="btn-copy" id="copy">Copy link</button>
           </div>
-          <p class="sign-note" id="result-note" hidden></p>
+          <details class="sign-more">
+            <summary>Show link</summary>
+            <a class="sign-url" id="result-url" href="#"></a>
+            <p class="sign-note" id="result-note" hidden></p>
+          </details>
         </div>
       </div>
+      <p class="another"><a href="./">Convert another link</a></p>
     </section>
 
     <section aria-labelledby="iphone">
       <h2 id="iphone">On iPhone, skip the copy and paste</h2>
       <div class="shortcut-cta">
-        <p>Add the shortcut once. Then tap Share on any Google Maps link, in Safari, Messages or WhatsApp, and choose Open in Apple Maps.</p>
+        <p>Add the shortcut, then tap Share › Open in Apple Maps on any Google Maps link.</p>
         <a class="btn-get" href="Open%20in%20Apple%20Maps.shortcut" download>Get the iPhone shortcut</a>
       </div>
     </section>
@@ -309,24 +326,11 @@
     <section aria-labelledby="how">
       <h2 id="how">How to open a Google Maps link in Apple Maps</h2>
       <ol class="steps">
-        <li>Copy the Google Maps link. In Google Maps tap Share, or long-press a link in Messages, WhatsApp or WeChat and choose Copy.</li>
-        <li>Paste it above. The link is converted as you paste.</li>
-        <li>Tap Open in Apple Maps. On iPhone, iPad and Mac the link opens straight in the Maps app.</li>
+        <li>Copy a Google Maps link.</li>
+        <li>Paste it above.</li>
+        <li>Tap Open in Apple Maps.</li>
       </ol>
-    </section>
-
-    <section aria-labelledby="supported">
-      <h2 id="supported">What it converts</h2>
-      <table>
-        <thead><tr><th scope="col">Link</th><th scope="col">What you get</th></tr></thead>
-        <tbody>
-          <tr><td>Places and businesses</td><td>The same place, at its exact pin, with its name and address</td></tr>
-          <tr><td>Dropped pins and coordinates</td><td>A pin at the same coordinates, including 48°51′30″N style</td></tr>
-          <tr><td>Searches like “coffee near me”</td><td>The same search around the same area</td></tr>
-          <tr><td>Directions</td><td>Start, destination, stops and travel mode: driving, walking, transit or cycling</td></tr>
-          <tr><td>Short links (<code>maps.app.goo.gl</code>, <code>maps.apple/p/</code>)</td><td>Open them in a browser first, then paste the full link</td></tr>
-        </tbody>
-      </table>
+      <p class="supported">Works with places, dropped pins, searches and directions, including stops and travel mode.</p>
     </section>
 
     <section aria-labelledby="faq">
@@ -345,18 +349,17 @@
       </details>
       <details>
         <summary>Which links can't be converted?</summary>
-        <p>Links that carry only an internal place ID, such as Google <code>?cid=</code> links, have no name or coordinates to convert. Open them in a browser and paste the full address from the address bar instead.</p>
+        <p>Short links (<code>maps.app.goo.gl</code>) and links with only a place ID (<code>?cid=</code>). Open them in a browser and paste the full address instead, or use the iPhone shortcut, which handles short links.</p>
       </details>
       <details>
         <summary>Can I use this from an app or shortcut?</summary>
-        <p>Yes. Open <code>https://steven-panxd.github.io/google-apple-maps-converter/?url=</code> followed by the link, and add <code>&amp;go=1</code> to jump straight to the converted map. The converter is also an open-source JavaScript library on <a href="https://github.com/steven-panxd/google-apple-maps-converter">GitHub</a>.</p>
+        <p>Yes. Open this page with <code>?url=</code> and the link, plus <code>&amp;go=1</code> to jump straight to the map. It's also an open-source JavaScript library on <a href="https://github.com/steven-panxd/google-apple-maps-converter">GitHub</a>.</p>
       </details>
     </section>
   </main>
 
   <footer class="wrap">
-    <p>Free and open source. <a href="https://github.com/steven-panxd/google-apple-maps-converter">Star it on GitHub</a> or <a href="https://github.com/steven-panxd/google-apple-maps-converter/issues">report a link that doesn’t convert</a>.</p>
-    <p>Not affiliated with Google or Apple.</p>
+    <p>Free and open source on <a href="https://github.com/steven-panxd/google-apple-maps-converter">GitHub</a>. Not affiliated with Google or Apple.</p>
   </footer>
 
   <script type="module" src="app.js"></script>
