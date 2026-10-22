@@ -37,6 +37,15 @@ const { url } = await convert('https://maps.apple/p/U8rE9v8n8iVZjr');
 // → https://www.google.com/maps/place/Apple+Park,+Apple+Inc.,+1+Apple+Park+Way,+Cupertino,+CA+95014,+United+States/@37.334859,-122.00904,17z
 ```
 
+## iPhone shortcut
+
+Open Google Maps links in Apple Maps straight from the share sheet:
+
+1. On your iPhone, open the [web converter](https://steven-panxd.github.io/google-apple-maps-converter/) in Safari and tap **Get the iPhone shortcut**, then open the download and tap **Add Shortcut**.
+2. On any Google Maps link (Safari, Messages, WhatsApp, WeChat…), tap **Share → Open in Apple Maps**. Run it from the Shortcuts app to convert the link on your clipboard.
+
+The shortcut expands short links on your phone and hands the full link to the web converter, which opens Apple Maps. Rebuild it with `python3 shortcut/build.py` on a Mac.
+
 ## Install
 
 ```sh
@@ -127,7 +136,7 @@ Parsing and converting full links works anywhere. Expanding short links from a p
 
 - [x] [Web converter page](https://steven-panxd.github.io/google-apple-maps-converter/)
 - [ ] Short-link expansion on the web page
-- [ ] iOS Shortcut (convert from the share sheet)
+- [x] iOS Shortcut (convert from the share sheet)
 - [ ] Safari extension (iOS and macOS): open Google Maps links in Apple Maps automatically
 - [ ] Userscript
 
