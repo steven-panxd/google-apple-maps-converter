@@ -24,7 +24,14 @@ function extractLink(text) {
   const m =
     text.match(/(?:https?:\/\/|maps:\/*|comgooglemaps:\/\/)[^\s<>"']+/i) ??
     text.match(/(?:maps\.app\.goo\.gl|goo\.gl\/maps|maps\.apple(?:\.com)?\/|(?:www\.)?google\.[a-z.]+\/maps)[^\s<>"']*/i);
-  return m ? m[0].replace(/[.,;!?)]+$/, '') : null;
+  if (!m) return null;
+  const link = m[0].replace(/[.,;!?)]+$/, '');
+  // EU visitors may land on consent.google.com?continue=<real link> after a short link.
+  try {
+    const u = new URL(link);
+    if (/^consent\.google\./i.test(u.hostname) && u.searchParams.get('continue')) return u.searchParams.get('continue');
+  } catch {}
+  return link;
 }
 
 /** fetch() stand-in for resolveShortLink: asks the worker, answers like a redirect. */

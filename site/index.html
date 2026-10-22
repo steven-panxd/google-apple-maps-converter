@@ -197,6 +197,13 @@
     .sign-note { margin: 0.8rem 0 0; font-size: 0.9rem; opacity: 0.85; }
 
     main section + section { margin-top: 3.5rem; }
+    .shortcut-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
+    .shortcut-cta p { margin: 0; flex: 1 1 18rem; color: var(--muted); }
+    .btn-get {
+      display: inline-block; text-decoration: none; font-weight: 800;
+      background: var(--sign); color: var(--sign-ink);
+      border-radius: 8px; padding: 0.7rem 1.15rem;
+    }
     h2 { font-size: 1.5rem; font-weight: 800; line-height: 1.15; margin: 0 0 1rem; letter-spacing: -0.01em; }
 
     .steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
@@ -288,6 +295,14 @@
           </div>
           <p class="sign-note" id="result-note" hidden></p>
         </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="iphone">
+      <h2 id="iphone">On iPhone, skip the copy and paste</h2>
+      <div class="shortcut-cta">
+        <p>Add the shortcut once. Then tap Share on any Google Maps link, in Safari, Messages or WhatsApp, and choose Open in Apple Maps.</p>
+        <a class="btn-get" href="Open-in-Apple-Maps.shortcut" download>Get the iPhone shortcut</a>
       </div>
     </section>
 
