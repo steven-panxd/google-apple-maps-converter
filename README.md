@@ -13,6 +13,8 @@ Paste a `google.com/maps` or `maps.app.goo.gl` link and get an Apple Maps link t
 - 🧭 **Directions**: origin, destination, waypoints and travel mode (driving, walking, transit, cycling)
 - 🔑 **No API key**, no tracking, zero dependencies; runs in Node, browsers, Safari extensions and userscripts
 
+**👉 Try it online: [steven-panxd.github.io/google-apple-maps-converter](https://steven-panxd.github.io/google-apple-maps-converter/)**
+
 ## How do I open a Google Maps link in Apple Maps?
 
 Convert the link, then open the result:
@@ -123,7 +125,8 @@ Parsing and converting full links works anywhere. Expanding short links from a p
 
 ## Roadmap
 
-- [ ] Web converter page
+- [x] [Web converter page](https://steven-panxd.github.io/google-apple-maps-converter/)
+- [ ] Short-link expansion on the web page
 - [ ] iOS Shortcut (convert from the share sheet)
 - [ ] Safari extension (iOS and macOS): open Google Maps links in Apple Maps automatically
 - [ ] Userscript

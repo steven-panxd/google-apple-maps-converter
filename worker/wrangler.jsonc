@@ -1,0 +1,6 @@
+{
+  "name": "google-apple-maps-converter",
+  "main": "index.js",
+  "compatibility_date": "2026-04-01",
+  "observability": { "enabled": false }
+}
