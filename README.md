@@ -2,7 +2,7 @@
 
 # Google Maps ↔ Apple Maps Link Converter
 
-**Open any Google Maps link in Apple Maps on iPhone, in one tap from the share sheet.** Places, dropped pins, searches and routes, short links included. Works the other way too.
+**Open any Google Maps link in Apple Maps on iPhone, in one tap from the share sheet.** Places, dropped pins, searches and routes keep their exact location and travel mode, short links included. The shortcut converts on your phone. Works the other way too.
 
 [![GitHub stars](https://img.shields.io/github/stars/steven-panxd/google-apple-maps-converter?style=social)](https://github.com/steven-panxd/google-apple-maps-converter)
 [![npm](https://img.shields.io/npm/v/google-apple-maps-converter)](https://www.npmjs.com/package/google-apple-maps-converter)
@@ -20,7 +20,7 @@
 
 1. Open **[the shortcut](https://www.icloud.com/shortcuts/11f47f8368224687891f5f5f49ffa01f)** on your iPhone and tap **Add Shortcut**.
 2. Long-press any Google Maps link (Messages, WhatsApp, WeChat, Mail, Safari), tap **Share…**, then **Open in Apple Maps**.
-3. The first time, iOS asks to let the shortcut open the link. Tap **Always Allow**.
+3. The first time, iOS asks whether the shortcut may send the link to Maps. Tap **Always Allow**. Short links ask once more, so Google can say where they point.
 
 Tested on iOS 26. Not in your share sheet? Open the Shortcuts app once, or scroll the share sheet and tap **Edit Actions** to add it to your favourites. Full guide with screenshots: **[maps.xuedo.ng/shortcut](https://maps.xuedo.ng/shortcut/)**.
 
