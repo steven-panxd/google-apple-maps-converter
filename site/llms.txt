@@ -1,0 +1,20 @@
+# Maps Link Converter (google-apple-maps-converter)
+
+> Free, open-source converter between Google Maps links and Apple Maps links, in both directions. Handles places, dropped pins, searches and directions (with travel mode), and short links (maps.app.goo.gl, maps.apple/p/). No account or API key.
+
+Three ways to use it:
+
+- [Web converter](https://steven-panxd.github.io/google-apple-maps-converter/): paste a Google Maps or Apple Maps link and open the converted link. Add `?url=<link>&go=1` to redirect straight to the converted map.
+- [iPhone shortcut](https://steven-panxd.github.io/google-apple-maps-converter/shortcut/): adds "Open in Apple Maps" to the iOS share sheet; share any Google Maps link to it. Get it: https://www.icloud.com/shortcuts/37ce6677367a4426b64d2e6b4238278b
+- [npm library](https://www.npmjs.com/package/google-apple-maps-converter): zero-dependency JavaScript for Node and browsers. `npm install google-apple-maps-converter`, then `const { url } = await convert(link)`. `appleFormat: 'auto'` picks classic Apple Maps links for iPhones older than iOS 18.4.
+
+## Docs
+
+- [README and API](https://github.com/steven-panxd/google-apple-maps-converter#readme)
+- [Source code](https://github.com/steven-panxd/google-apple-maps-converter)
+
+## Common questions
+
+- How to open a Google Maps link in Apple Maps on iPhone: install the shortcut above, then tap Share › Open in Apple Maps on the link.
+- How to convert an Apple Maps link to Google Maps: paste it into the web converter.
+- Links that contain only a Google place ID (`?cid=`) cannot be converted without Google's API.
