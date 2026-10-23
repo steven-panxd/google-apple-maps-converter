@@ -21,7 +21,8 @@
     "stop": "(?!@|data=|am=|{here}(?:[/?#]|$))[^/?#]",
     "dir_mode": "(?![^?#]*!3e1)(?=[^?#]*!3e([023])|)",
     "dir_end": "(?:/(?:@|data=|am=)[^?#]*)?/?(?:[?#].*)?$",
-    "here": "(?:my|current)(?:\\+|%20)location"
+    "here": "(?:my|current)(?:\\+|%20)location",
+    "classic": "https?://(?:(?:www\\.)?google\\.{tld}/maps/?|maps\\.google\\.{tld}(?:/maps)?/?)\\?"
   },
   "rules": [
     {
@@ -116,7 +117,7 @@
     },
     {
       "name": "api directions",
-      "find": "^{google}/maps/dir/?\\?{api}(?![^#]*[?&](?:waypoints=[^&#]|travelmode=bicycling))(?=(?:[^#]*&)?destination=([^&#]+))(?=(?:[^#]*&)?origin=([^&#]*)|)(?=(?:[^#]*&)?travelmode=(driving|walking|transit)(?:[&#]|$)|){rest}",
+      "find": "^{google}/maps/dir/?\\?{api}(?!(?:[^#]*&)?(?:waypoints=[^&#]|travelmode=bicycling))(?=(?:[^#]*&)?destination=([^&#]+))(?=(?:[^#]*&)?origin=([^&#]*)|)(?=(?:[^#]*&)?travelmode=(driving|walking|transit)(?:[&#]|$)|){rest}",
       "replace": "https://maps.apple.com/?saddr=$2&daddr=$1&dirflg=X$3",
       "example": [
         "https://www.google.com/maps/dir/?api=1&origin=Louvre&destination=Eiffel+Tower&travelmode=transit",
@@ -124,8 +125,17 @@
       ]
     },
     {
+      "name": "classic directions",
+      "find": "^{classic}(?!(?:[^#]*&)?daddr=[^&#]*(?:\\+|%20)to(?::|%3A))(?!(?:[^#]*&)?daddr={here}(?:[&#]|$))(?!(?:[^#]*&)?dirflg=[a-z]*b)(?=(?:[^#]*&)?daddr=([^&#]+))(?=(?:[^#]*&)?saddr=([^&#]*)|)(?=(?:[^#]*&)?dirflg=([a-z]*)(?:[&#]|$)|){rest}",
+      "replace": "https://maps.apple.com/?saddr=$2&daddr=$1&dirflg=X$3",
+      "example": [
+        "https://maps.google.com/?daddr=Eiffel+Tower,+Paris&saddr=Louvre+Museum,+Paris&dirflg=w&ftid=0x0:0x0&g_st=ic",
+        "maps://?saddr=Louvre+Museum,+Paris&daddr=Eiffel+Tower,+Paris&dirflg=w"
+      ]
+    },
+    {
       "name": "query",
-      "find": "^https?://(?:(?:www\\.)?google\\.{tld}/maps/?|maps\\.google\\.{tld}(?:/maps)?/?)\\?(?![^#]*[?&](?:api|saddr|daddr|ll|sll|center)=)(?=(?:[^#]*&)?(?:q|query)=({not_coords_param}[^&#]+)){rest}",
+      "find": "^{classic}(?!(?:[^#]*&)?(?:api|saddr|daddr|ll|sll|center)=)(?=(?:[^#]*&)?(?:q|query)=({not_coords_param}[^&#]+)){rest}",
       "replace": "https://maps.apple.com/?q=$1",
       "example": [
         "https://maps.google.com/?q=Eiffel+Tower&ftid=0x0:0x0&entry=gps",
@@ -142,17 +152,8 @@
       ]
     },
     {
-      "name": "drive",
-      "find": "^({apple}.*&dirflg=)X(?:0|driving)$",
-      "replace": "$1d",
-      "example": [
-        "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e0",
-        "maps://?saddr=Louvre&daddr=Eiffel+Tower&dirflg=d"
-      ]
-    },
-    {
       "name": "walk",
-      "find": "^({apple}.*&dirflg=)X(?:2|walking)$",
+      "find": "^({apple}.*&dirflg=)X(?:2|walking|[a-z]*w[a-z]*)$",
       "replace": "$1w",
       "example": [
         "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e2",
@@ -161,7 +162,7 @@
     },
     {
       "name": "transit",
-      "find": "^({apple}.*&dirflg=)X(?:3|transit)$",
+      "find": "^({apple}.*&dirflg=)X(?:3|transit|[a-z]*r[a-z]*)$",
       "replace": "$1r",
       "example": [
         "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e3",
@@ -169,8 +170,17 @@
       ]
     },
     {
+      "name": "drive",
+      "find": "^({apple}.*&dirflg=)X(?:0|driving|[a-z]*d[a-z]*)$",
+      "replace": "$1d",
+      "example": [
+        "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e0",
+        "maps://?saddr=Louvre&daddr=Eiffel+Tower&dirflg=d"
+      ]
+    },
+    {
       "name": "no mode",
-      "find": "^({apple}.*)&dirflg=X$",
+      "find": "^({apple}.*)&dirflg=X[a-z]*$",
       "replace": "$1",
       "example": [
         "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/",
@@ -183,6 +193,15 @@
       "replace": "$1",
       "example": [
         "https://www.google.com/maps/dir//Eiffel+Tower/",
+        "maps://?daddr=Eiffel+Tower"
+      ]
+    },
+    {
+      "name": "from here",
+      "find": "^({apple})saddr={here}&",
+      "replace": "$1",
+      "example": [
+        "https://maps.google.com/?saddr=Current+Location&daddr=Eiffel+Tower",
         "maps://?daddr=Eiffel+Tower"
       ]
     },

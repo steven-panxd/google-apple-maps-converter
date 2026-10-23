@@ -4,7 +4,7 @@
 What the shortcut does with what it's given (share sheet input, or the clipboard):
 
     link in it?  no  -> search the text in Apple Maps (a shared address, a place name)
-                 yes -> take the first link
+                 yes -> take the first link, as plain text
                         short link (goo.gl)? -> ask Google where it points; full links stay on the phone
                         run the regex rules in rules.json
                         maps://...?    yes -> open it in the Maps app
@@ -29,11 +29,12 @@ CONVERTER = "https://maps.xuedo.ng/"
 MAPS_APP = "maps://"
 
 # Shortcuts' condition codes.
-CONTAINS = 99
 BEGINS_WITH = 8
 HAS_ANY_VALUE = 100
 
 SHORTCUT_INPUT = {"Type": "ExtensionInput"}
+LINK_PATTERN = r"https?://[^\s<>\"]+"
+SHORT_LINK_PATTERN = r"^https?://(?:maps\.app\.goo\.gl|goo\.gl/maps)/"
 
 
 def load_rules():
@@ -106,7 +107,8 @@ class Shortcut:
 
 def where_short_links_point(s, link):
     """Only short links need Google to say where they point, so full links never leave the phone."""
-    short = s.if_(link, CONTAINS, "goo.gl")
+    is_short = s.add("text.match", "Short Link", WFMatchTextPattern=SHORT_LINK_PATTERN, text=text(link))
+    short = s.if_(is_short, HAS_ANY_VALUE)
     s.add("url.expand", "Expanded URL", URL=text(link))
     s.otherwise(short)
     s.add("gettext", "Link", WFTextActionText=text(link))
@@ -135,7 +137,9 @@ def open_web_converter(s, link):
 
 def build():
     s = Shortcut()
-    links = s.add("detect.link", "URLs", WFInput=text(SHORTCUT_INPUT))
+    # Pull links out of the input as plain text. "Get URLs from Input" returns URL items that some
+    # apps (the Google Maps app) back with a web page, and those turn into the page's text when used.
+    links = s.add("text.match", "Links", WFMatchTextPattern=LINK_PATTERN, text=text(SHORTCUT_INPUT))
 
     has_link = s.if_(links, HAS_ANY_VALUE)
     first = s.add("getitemfromlist", "First Link", WFItemSpecifier="First Item", WFInput=value(links))
