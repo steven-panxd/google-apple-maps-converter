@@ -218,6 +218,20 @@ pre + .button { margin-top: 8px; }
 .foot p { margin: 0; padding-top: 24px; border-top: 1px solid var(--line); }
 .foot a { color: var(--muted); }
 
+/* Short landscape screens (phones sideways): tighter rhythm, map beside the answer so the actions stay on screen. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .top { padding-top: 12px; padding-bottom: 12px; }
+  .convert { padding-top: 8px; }
+  section { padding: 28px 0; }
+  .lead { margin-bottom: 16px; }
+  .answer:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+  .answer:has(.answer-map[hidden]) { grid-template-columns: 1fr; }
+  .answer-map { height: auto; min-height: 170px; }
+  .answer-body { padding: 16px 20px; }
+  .answer-actions { margin-top: 12px; }
+  .focused .convert { padding-top: 12px; }
+}
+
 /* Opened from a link (?url=): only the answer */
 .focused .top, .focused h1, .focused .lead, .focused .field, .focused .examples,
 .focused main > section:not(.convert), .focused .foot { display: none; }

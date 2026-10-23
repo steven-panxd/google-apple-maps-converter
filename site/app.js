@@ -145,6 +145,18 @@ function errorFor(parsed) {
   }
 }
 
+/** Bring a new answer into view when it lands below the fold (phones in landscape, small windows). */
+function revealIfBelow(el) {
+  if (document.documentElement.classList.contains('focused')) return;
+  requestAnimationFrame(() => {
+    const box = el.getBoundingClientRect();
+    if (box.top > innerHeight - 80 || box.bottom > innerHeight) {
+      const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({ block: box.height > innerHeight ? 'start' : 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+    }
+  });
+}
+
 function showError(text) {
   shortHelp.hidden = true;
   result.hidden = true;
@@ -161,7 +173,9 @@ function showShortHelp(link) {
   $('short-addr').textContent = /maps\.apple/i.test(link)
     ? 'maps.apple.com/place?coordinate=37.334859,-122.009040&name=…'
     : 'google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=…';
+  const wasHidden = shortHelp.hidden;
   shortHelp.hidden = false;
+  if (wasHidden) revealIfBelow(shortHelp);
 }
 
 async function update({ go = false } = {}) {
@@ -234,6 +248,7 @@ async function update({ go = false } = {}) {
     result.classList.remove('arrive');
     void result.offsetWidth;
     result.classList.add('arrive');
+    revealIfBelow(result);
   }
 }
 
