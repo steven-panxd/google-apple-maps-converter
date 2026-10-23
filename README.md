@@ -11,14 +11,14 @@
 <p align="center"><img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/docs/demo.gif" width="280" alt="Long-press a Google Maps link, tap Share, then Open in Apple Maps: Apple Maps opens at the Eiffel Tower"></p>
 
 <p align="center">
-  <a href="https://www.icloud.com/shortcuts/0a98d31f63cf4de298cc32c68de67aad"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
+  <a href="https://www.icloud.com/shortcuts/fa61bb439f294853afa7d966abb49bfc"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
   <br>
   or paste a link at <a href="https://maps.xuedo.ng/"><b>maps.xuedo.ng</b></a>
 </p>
 
 ## How do I open a Google Maps link in Apple Maps on iPhone?
 
-1. Open **[the shortcut](https://www.icloud.com/shortcuts/0a98d31f63cf4de298cc32c68de67aad)** on your iPhone and tap **Add Shortcut**.
+1. Open **[the shortcut](https://www.icloud.com/shortcuts/fa61bb439f294853afa7d966abb49bfc)** on your iPhone and tap **Add Shortcut**.
 2. Long-press any Google Maps link (Messages, WhatsApp, WeChat, Mail, Safari), tap **Share…**, then **Open in Apple Maps**.
 3. The first time, iOS asks to let the shortcut open the link. Tap **Always Allow**.
 
