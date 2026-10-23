@@ -74,7 +74,7 @@ def build():
         "WFWorkflowClientVersion": "2607.0.1",
         "WFWorkflowMinimumClientVersion": 900,
         "WFWorkflowMinimumClientVersionString": "900",
-        "WFWorkflowIcon": {"WFWorkflowIconStartColor": 4292093695, "WFWorkflowIconGlyphNumber": 59769},  # green map pin
+        "WFWorkflowIcon": {"WFWorkflowIconStartColor": 463140863, "WFWorkflowIconGlyphNumber": 59769},  # blue map pin, matches the logo arrow
         "WFWorkflowImportQuestions": [],
         "WFWorkflowTypes": ["ActionExtension"],
         "WFWorkflowInputContentItemClasses": ["WFURLContentItem", "WFStringContentItem", "WFSafariWebPageContentItem"],
