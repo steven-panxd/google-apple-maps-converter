@@ -22,10 +22,6 @@
 2. Long-press any Google Maps link (Messages, WhatsApp, WeChat, Mail, Safari), tap **Share…**, then **Open in Apple Maps**.
 3. The first time, iOS asks to let the shortcut open the link. Tap **Always Allow**.
 
-| Add it | Share a link | Allow once |
-|:---:|:---:|:---:|
-| <img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/site/shortcut/img/01-add-shortcut.jpg" width="200" alt="Add Shortcut screen"> | <img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/site/shortcut/img/02-share-sheet.jpg" width="200" alt="Share sheet with Open in Apple Maps"> | <img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/site/shortcut/img/03-allow.jpg" width="200" alt="Always Allow prompt"> |
-
 Tested on iOS 26. Not in your share sheet? Open the Shortcuts app once, or scroll the share sheet and tap **Edit Actions** to add it to your favourites. Full guide with screenshots: **[maps.xuedo.ng/shortcut](https://maps.xuedo.ng/shortcut/)**.
 
 **Privacy:** no account and no tracking. The shortcut opens maps.xuedo.ng, a static page that converts the link in Safari on your phone; nothing is stored.
