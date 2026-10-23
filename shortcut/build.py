@@ -109,7 +109,11 @@ def where_short_links_point(s, link):
     """Only short links need Google to say where they point, so full links never leave the phone."""
     is_short = s.add("text.match", "Short Link", WFMatchTextPattern=SHORT_LINK_PATTERN, text=text(link))
     short = s.if_(is_short, HAS_ANY_VALUE)
-    s.add("url.expand", "Expanded URL", URL=text(link))
+    expanded = s.add("url.expand", "Expanded URL", URL=text(link))
+    # A URL used as text can turn into the text of its web page; encoding then decoding it gives the
+    # address itself, unchanged (encoding escapes "%" too, so the round trip is exact).
+    encoded = s.add("urlencode", "Encoded URL", WFEncodeMode="Encode", WFInput=text(expanded))
+    s.add("urlencode", "Expanded Link", WFEncodeMode="Decode", WFInput=text(encoded))
     s.otherwise(short)
     s.add("gettext", "Link", WFTextActionText=text(link))
     return s.end_if(short)
