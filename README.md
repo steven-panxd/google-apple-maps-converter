@@ -15,7 +15,7 @@ Paste a `google.com/maps` or `maps.app.goo.gl` link and get an Apple Maps link t
 - 🔑 **No API key**, no tracking, zero dependencies; runs in Node, browsers, Safari extensions and userscripts
 
 **👉 Try it online: [maps.xuedo.ng](https://maps.xuedo.ng/)**
-**📱 On iPhone: [get the free shortcut](https://www.icloud.com/shortcuts/37ce6677367a4426b64d2e6b4238278b)**, then tap Share › Open in Apple Maps on any Google Maps link ([step-by-step guide](https://maps.xuedo.ng/shortcut/)).
+**📱 On iPhone: [get the free shortcut](https://www.icloud.com/shortcuts/4081eff984784c2f9a7d564c82928c01)**, then tap Share › Open in Apple Maps on any Google Maps link ([step-by-step guide](https://maps.xuedo.ng/shortcut/)).
 
 <p align="center"><img src="docs/demo.gif" width="280" alt="Long-press a Google Maps link, tap Share, then Open in Apple Maps: Apple Maps opens at the Eiffel Tower"></p>
 
@@ -47,7 +47,7 @@ const { url } = await convert('https://maps.apple/p/U8rE9v8n8iVZjr');
 
 Open Google Maps links in Apple Maps straight from the share sheet:
 
-1. On your iPhone, open **[the shortcut on iCloud](https://www.icloud.com/shortcuts/37ce6677367a4426b64d2e6b4238278b)** and tap **Add Shortcut**.
+1. On your iPhone, open **[the shortcut on iCloud](https://www.icloud.com/shortcuts/4081eff984784c2f9a7d564c82928c01)** and tap **Add Shortcut**.
 2. On any Google Maps link (Safari, Messages, WhatsApp, WeChat…), tap **Share → Open in Apple Maps**. Run it from the Shortcuts app to convert the link on your clipboard.
 
 Screenshots of every step: **[iPhone shortcut guide](https://maps.xuedo.ng/shortcut/)**.
