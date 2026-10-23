@@ -336,9 +336,27 @@ fetch('https://api.github.com/repos/steven-panxd/google-apple-maps-converter')
   })
   .catch(() => {});
 
+/**
+ * Reads a query parameter without turning "+" into a space: the shortcut's URL-encode step leaves
+ * "+" as is, and Google writes spaces in place names as "+" (/place/Golden+Gate+Bridge/@…).
+ */
+function rawParam(name) {
+  for (const part of location.search.slice(1).split('&')) {
+    const i = part.indexOf('=');
+    if (i < 0 || part.slice(0, i) !== name) continue;
+    const value = part.slice(i + 1);
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
+  return null;
+}
+
 // ?url=<link> shows just the answer; &go=1 jumps straight to the converted map.
-const params = new URLSearchParams(location.search);
-if (params.get('url')) {
-  input.value = params.get('url');
-  update({ go: params.get('go') === '1' });
+const linkParam = rawParam('url');
+if (linkParam) {
+  input.value = linkParam;
+  update({ go: rawParam('go') === '1' });
 }
