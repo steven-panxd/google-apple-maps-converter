@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/logo.png" width="96" height="96" alt="Maps Link Converter icon: a red location pin and a dotted route to a blue navigation arrow"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/docs/logo.png" width="96" height="96" alt="Maps Link Converter icon: a red location pin and a dotted route to a blue navigation arrow"></p>
 
 # Google Maps ↔ Apple Maps Link Converter
 
@@ -19,7 +19,7 @@ Paste a `google.com/maps` or `maps.app.goo.gl` link and get an Apple Maps link t
 **👉 Try it online: [maps.xuedo.ng](https://maps.xuedo.ng/)**
 **📱 On iPhone: [get the free shortcut](https://www.icloud.com/shortcuts/8c1cc1bb94e14469a7711dfb46267d7a)**, then tap Share › Open in Apple Maps on any Google Maps link ([step-by-step guide](https://maps.xuedo.ng/shortcut/)).
 
-<p align="center"><img src="docs/demo.gif" width="280" alt="Long-press a Google Maps link, tap Share, then Open in Apple Maps: Apple Maps opens at the Eiffel Tower"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/docs/demo.gif" width="280" alt="Long-press a Google Maps link, tap Share, then Open in Apple Maps: Apple Maps opens at the Eiffel Tower"></p>
 
 If it saves you a few taps, please [⭐ star the repo](https://github.com/steven-panxd/google-apple-maps-converter). It helps other people find it.
 
@@ -158,7 +158,10 @@ Links that carry only an internal place ID (Google `?cid=` / `query_place_id`, A
 Map zoom isn't part of Apple's unified URLs, and legacy Apple links can't express waypoints or cycling. Everything else (place name, address, exact coordinates, route stops, travel mode) carries over.
 
 **Can I use it in a web page?**
-Parsing and converting full links works anywhere. Expanding short links from a plain web page is blocked by CORS, so do that in Node, a browser extension, an iOS Shortcut or a small server.
+Parsing and converting full links works anywhere. Expanding short links from a plain web page is blocked by CORS, so do that in Node, a browser extension, an iOS Shortcut or a small server. The [web converter](https://maps.xuedo.ng/) walks visitors through short links instead.
+
+**Can I link to the converter from my own app or shortcut?**
+Yes. Open `https://maps.xuedo.ng/?url=<encoded link>` to show the converted link, or add `&go=1` to jump straight to the map. The iPhone shortcut works this way.
 
 ## Support the project
 
@@ -169,7 +172,7 @@ Parsing and converting full links works anywhere. Expanding short links from a p
 ## Roadmap
 
 - [x] [Web converter page](https://maps.xuedo.ng/)
-- [ ] Short-link expansion on the web page
+- [x] Short links on the web page (guided: open the link, paste the full address)
 - [x] iOS Shortcut (convert from the share sheet)
 - [ ] Safari extension (iOS and macOS): open Google Maps links in Apple Maps automatically
 - [ ] Userscript
@@ -181,6 +184,14 @@ Ideas and PRs welcome. If you hit a link that doesn't convert, please [open an i
 ```sh
 npm test
 ```
+
+| Folder | What's in it |
+|---|---|
+| `src/` | The library (the only folder published to npm) |
+| `test/` | Unit tests, run with Node's built-in test runner |
+| `site/` | The web converter and the shortcut guide, deployed to GitHub Pages |
+| `shortcut/` | `build.py` generates and signs the iPhone shortcut (macOS) |
+| `worker/` | Optional Cloudflare Worker that expands short links for the web page (not deployed) |
 
 ## License
 
