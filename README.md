@@ -11,18 +11,18 @@
 <p align="center"><img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/docs/demo.gif" width="280" alt="Long-press a Google Maps link, tap Share, then Open in Apple Maps: Apple Maps opens at the Eiffel Tower"></p>
 
 <p align="center">
-  <a href="https://www.icloud.com/shortcuts/11f47f8368224687891f5f5f49ffa01f"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
+  <a href="https://www.icloud.com/shortcuts/b1bf1dce8a7543c9bdd21148cc95735b"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
   <br>
   or paste a link at <a href="https://maps.xuedo.ng/"><b>maps.xuedo.ng</b></a>
 </p>
 
 ## How do I open a Google Maps link in Apple Maps on iPhone?
 
-1. Open **[the shortcut](https://www.icloud.com/shortcuts/11f47f8368224687891f5f5f49ffa01f)** on your iPhone and tap **Add Shortcut**.
-2. Long-press any Google Maps link (Messages, WhatsApp, WeChat, Mail, Safari), tap **Share…**, then **Open in Apple Maps**.
+1. Open **[the shortcut](https://www.icloud.com/shortcuts/b1bf1dce8a7543c9bdd21148cc95735b)** on your iPhone and tap **Add Shortcut**.
+2. Open the Google Maps link. It opens in Google Maps or Safari: tap **Share**, then **Open in Apple Maps**. In Messages or WeChat, which can't share a link, you can also copy it and run the shortcut from the Shortcuts app instead: it reads the clipboard.
 3. The first time, iOS asks whether the shortcut may send the link to Maps. Tap **Always Allow**. Short links ask once more, so Google can say where they point.
 
-Tested on iOS 26. Not in your share sheet? Open the Shortcuts app once, or scroll the share sheet and tap **Edit Actions** to add it to your favourites. Full guide with screenshots: **[maps.xuedo.ng/shortcut](https://maps.xuedo.ng/shortcut/)**.
+Tested on a real iPhone (iOS 18.3) with links from Messages, the Google Maps app and WeChat, and on iOS 18.6 and 26. Not in your share sheet? Open the Shortcuts app once, or scroll the share sheet and tap **Edit Actions** to add it to your favourites. Full guide with screenshots: **[maps.xuedo.ng/shortcut](https://maps.xuedo.ng/shortcut/)**.
 
 **Privacy:** the shortcut converts links on your iPhone and opens Apple Maps directly. No account, no tracking, no server of mine. Short links (maps.app.goo.gl) are expanded by asking Google, which made them. Links the shortcut doesn't recognise, such as cycling routes, routes with stops in between or bare coordinates, open [maps.xuedo.ng](https://maps.xuedo.ng/), a static page that converts them in Safari on your phone.
 

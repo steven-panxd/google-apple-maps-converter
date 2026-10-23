@@ -5,7 +5,7 @@
 Three ways to use it:
 
 - [Web converter](https://maps.xuedo.ng/): paste a Google Maps or Apple Maps link and open the converted link. Add `?url=<link>&go=1` to redirect straight to the converted map.
-- [iPhone shortcut](https://maps.xuedo.ng/shortcut/): adds "Open in Apple Maps" to the iOS share sheet; share any Google Maps link to it. Get it: https://www.icloud.com/shortcuts/11f47f8368224687891f5f5f49ffa01f
+- [iPhone shortcut](https://maps.xuedo.ng/shortcut/): adds "Open in Apple Maps" to the iOS share sheet; share any Google Maps link to it. Get it: https://www.icloud.com/shortcuts/b1bf1dce8a7543c9bdd21148cc95735b
 - [npm library](https://www.npmjs.com/package/google-apple-maps-converter): zero-dependency JavaScript for Node and browsers. `npm install google-apple-maps-converter`, then `const { url } = await convert(link)`. `appleFormat: 'auto'` picks classic Apple Maps links for iPhones older than iOS 18.4.
 
 ## Docs
@@ -15,6 +15,6 @@ Three ways to use it:
 
 ## Common questions
 
-- How to open a Google Maps link in Apple Maps on iPhone: install the shortcut above, then tap Share › Open in Apple Maps on the link.
+- How to open a Google Maps link in Apple Maps on iPhone: install the shortcut above, then open the link (it opens in Google Maps or Safari) and tap Share › Open in Apple Maps. In Messages or WeChat, copy the link and run the shortcut; it reads the clipboard.
 - How to convert an Apple Maps link to Google Maps: paste it into the web converter.
 - Links that contain only a Google place ID (`?cid=`) cannot be converted without Google's API.
