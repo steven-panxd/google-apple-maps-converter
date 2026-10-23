@@ -4,7 +4,7 @@
  * @typedef {{ lat: number, lng: number }} LatLng
  *
  * @typedef {LatLng | { query: string } | null} Location
- *   A directions stop. `null` means "current location".
+ *   A directions stop. `null` means "current location", which only the origin can be.
  *
  * @typedef {'driving' | 'walking' | 'bicycling' | 'transit'} TravelMode
  *
@@ -12,14 +12,14 @@
  *   | { kind: 'place', name: string, address?: string, lat?: number, lng?: number, zoom?: number }
  *   | { kind: 'coords', lat: number, lng: number, zoom?: number }
  *   | { kind: 'search', query: string, near?: LatLng, zoom?: number }
- *   | { kind: 'directions', origin: Location, destination: Location, waypoints: Location[], travelMode?: TravelMode }
+ *   | { kind: 'directions', origin: Location, destination: Exclude<Location, null>, waypoints: Exclude<Location, null>[], travelMode?: TravelMode }
  *   | { kind: 'short', url: string }
  *   | { kind: 'unsupported', reason: string }
  * )} ParsedLink
  */
 
-const NUM = String.raw`[-+]?\d{1,3}(?:\.\d+)?`;
-export const NUM_PATTERN = NUM;
+/** A coordinate number in a regex: up to three integer digits, optional sign and decimals. */
+export const NUM = String.raw`[-+]?\d{1,3}(?:\.\d+)?`;
 const COORD_TEXT = new RegExp(String.raw`^\s*(${NUM})\s*,\s*(${NUM})\s*$`);
 const DMS_TEXT =
   /^\s*(\d{1,2})°\s*(\d{1,2})['′]\s*([\d.]+)["″]?\s*([NS])[\s,]+(\d{1,3})°\s*(\d{1,3})['′]\s*([\d.]+)["″]?\s*([EW])\s*$/i;

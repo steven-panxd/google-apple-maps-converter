@@ -24,7 +24,7 @@
 
 Tested on iOS 26. Not in your share sheet? Open the Shortcuts app once, or scroll the share sheet and tap **Edit Actions** to add it to your favourites. Full guide with screenshots: **[maps.xuedo.ng/shortcut](https://maps.xuedo.ng/shortcut/)**.
 
-**Privacy:** the shortcut converts places, pins, searches and routes on your iPhone and opens Apple Maps directly. No server, no account, no tracking. Only rarer links (cycling routes, routes with stops in between) fall back to [maps.xuedo.ng](https://maps.xuedo.ng/), a static page that converts them in Safari on your phone.
+**Privacy:** the shortcut converts links on your iPhone and opens Apple Maps directly. No account, no tracking, no server of mine. Short links (maps.app.goo.gl) are expanded by asking Google, which made them. Links the shortcut doesn't recognise, such as cycling routes, routes with stops in between or bare coordinates, open [maps.xuedo.ng](https://maps.xuedo.ng/), a static page that converts them in Safari on your phone.
 
 ## Why?
 
@@ -58,20 +58,21 @@ Zero dependencies; runs in Node, browsers, extensions and userscripts. No API ke
 
 ```js
 import {
-  convert,            // (url, { to?: 'auto' | 'apple' | 'google', appleFormat?: 'unified' | 'legacy' | 'auto', device? }) → Promise<{ url, from, to, parsed, resolvedUrl }>
+  convert,            // (url, { to?: 'auto' | 'apple' | 'google', appleFormat?: 'unified' | 'legacy' | 'auto', device?, fetch?, signal? }) → Promise<{ url, from, to, parsed, resolvedUrl }>
   parseMapsUrl,       // (url) → ParsedLink: auto-detects Google or Apple, never throws, no network
   parseGoogleMapsUrl, // (url) → ParsedLink
   parseAppleMapsUrl,  // (url) → ParsedLink
   toAppleMapsUrl,     // (parsed, { format?: 'unified' | 'legacy' | 'auto', device? }) → string | null
   detectAppleLinkFormat, // (device?) → 'unified' | 'legacy': which Apple Maps links this device can open
   toGoogleMapsUrl,    // (parsed) → string | null
-  resolveShortLink,   // (url) → Promise<string>: expands maps.app.goo.gl / maps.apple short links
+  resolveShortLink,   // (url, { fetch?, signal?, maxRedirects? = 5 }) → Promise<string>: expands maps.app.goo.gl / maps.apple short links
+  unwrapConsent,      // (url) → string: the real link inside an EU consent.google.com?continue=… page
   detectProvider,     // (url) → 'google' | 'apple' | null
   isShortLink,        // (url) → boolean
 } from 'google-apple-maps-converter';
 ```
 
-Parsing and building are synchronous and offline. Only `convert` on a short link (or `resolveShortLink`) makes a network request, to Google or Apple's redirect server.
+Parsing and building are synchronous and offline. Only `convert` on a short link (or `resolveShortLink`) makes a network request, to Google or Apple's redirect server; pass `fetch` to route it elsewhere (a proxy, a test stub) and `signal` to cancel it. `convert` never throws for a bad link: it returns `url: null` and says why in `parsed.reason`. It rejects only when a short link can't be expanded.
 
 `ParsedLink` is a small provider-neutral model:
 
@@ -136,7 +137,7 @@ const { url } = await convert(link, { appleFormat: 'auto' });
 const { url } = await convert(link, { appleFormat: 'auto', device: { userAgent: req.headers['user-agent'] } });
 ```
 
-`'auto'` returns unified only when the device is known to handle it (iOS/iPadOS 18.4+, Safari 26 on Mac, and non-Apple devices, which open Apple Maps on the web). Whenever it can't tell — no user agent, a hidden or unusual one, an error reading it — it falls back to legacy, which always opens. iOS 26 Safari freezes its reported version at `18_6`, which still counts as new enough.
+`'auto'` returns unified only when the device is known to handle it (iOS/iPadOS 18.4+, and non-Apple devices, which open Apple Maps on the web). Macs get legacy: their browsers don't reveal the macOS version. Whenever it can't tell — no user agent, a hidden or unusual one, an error reading it — it falls back to legacy, which always opens. iOS 26 Safari freezes its reported version at `18_6`, which still counts as new enough.
 
 </details>
 

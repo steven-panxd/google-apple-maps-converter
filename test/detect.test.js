@@ -34,9 +34,9 @@ test('iPads asking for desktop sites are told apart from Macs by touch points', 
   assert.equal(detectAppleLinkFormat({ userAgent: ua.desktopSafari185, maxTouchPoints: 5 }), 'unified');
 });
 
-test('Macs: newer links only from Safari 26; other Mac browsers give no hint', () => {
+test('Macs always get classic links: Safari 26 also runs on macOS 14, which ignores the newer ones', () => {
   assert.equal(detectAppleLinkFormat({ userAgent: ua.desktopSafari185, maxTouchPoints: 0 }), 'legacy');
-  assert.equal(detectAppleLinkFormat({ userAgent: ua.desktopSafari26, maxTouchPoints: 0 }), 'unified');
+  assert.equal(detectAppleLinkFormat({ userAgent: ua.desktopSafari26, maxTouchPoints: 0 }), 'legacy');
   assert.equal(detectAppleLinkFormat({ userAgent: ua.macChrome }), 'legacy');
 });
 

@@ -147,15 +147,14 @@ export function detectAppleLinkFormat(device = globalThis.navigator) {
     const ios = /\b(?:iPhone|iPad|iPod)\b.*?\bOS (\d+)_(\d+)/.exec(ua);
     if (ios) return atLeast(Number(ios[1]), Number(ios[2]), 18, 4) ? 'unified' : 'legacy';
 
-    // Macs, and iPads asking for desktop sites, report a frozen OS version; Safari's own version
-    // follows the system release, so it is the only usable hint. Other Mac browsers give none.
+    // Macs, and iPads asking for desktop sites, report a frozen OS version. On iPad, Safari's own
+    // version follows the system release. On a Mac it doesn't (Safari 26 also runs on macOS 14 and
+    // 15), so nothing tells the macOS version apart: Macs get classic links.
     if (/\bMacintosh\b/.test(ua)) {
-      const safari = /\bVersion\/(\d+)(?:\.(\d+))?.*\bSafari\//.exec(ua);
-      if (!safari) return 'legacy';
-      const [major, minor] = [Number(safari[1]), Number(safari[2] ?? 0)];
       const isIPad = Number(device?.maxTouchPoints ?? 0) > 1;
-      if (isIPad) return atLeast(major, minor, 18, 4) ? 'unified' : 'legacy';
-      return major >= 26 ? 'unified' : 'legacy';
+      const safari = /\bVersion\/(\d+)(?:\.(\d+))?.*\bSafari\//.exec(ua);
+      if (!isIPad || !safari) return 'legacy';
+      return atLeast(Number(safari[1]), Number(safari[2] ?? 0), 18, 4) ? 'unified' : 'legacy';
     }
 
     // Everyone else opens maps.apple.com in the browser, which understands the newer links.
@@ -199,7 +198,7 @@ function parseLegacy(params) {
       origin: toLocation(saddr),
       destination,
       waypoints: [],
-      ...travelMode(legacyMode(params.get('dirflg'))),
+      ...travelMode(appleDirFlag(params.get('dirflg'))),
     };
   }
 
@@ -226,7 +225,7 @@ function parseLegacy(params) {
 }
 
 /** @param {string | null} flag @returns {TravelMode | undefined} */
-function legacyMode(flag) {
+function appleDirFlag(flag) {
   switch (flag?.toLowerCase()) {
     case 'd':
       return 'driving';

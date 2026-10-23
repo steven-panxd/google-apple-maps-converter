@@ -1,7 +1,7 @@
 {
   "about": [
     "Regex replacements the shortcut runs, in order, to turn a Google Maps link into a classic Apple Maps link on the phone.",
-    "Each rule either matches the whole link or leaves it alone. Links that come out starting with maps:// open in the Maps app; anything else goes to the web converter.",
+    "Google links are converted only when a rule matches the whole link; later rules then tidy the Apple Maps link it produced. Links that end up starting with maps:// open in the Maps app; anything else goes to the web converter.",
     "{name} in a pattern stands for parts[name]. Matching is case-insensitive.",
     "test/shortcut-rules.test.js checks every rule against the library, and each example exactly."
   ],
@@ -18,9 +18,10 @@
     "num": "(-?\\d+(?:\\.\\d+)?)",
     "pin": "[^?#]*?!3d{num}!4d{num}",
     "at": "@(-?(?:[0-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?)),(-?(?:(?:1[0-7]\\d|\\d?\\d)(?:\\.\\d+)?|180(?:\\.0+)?))(?![\\d.])",
-    "stop": "(?!@|data=|am=)[^/?#]",
+    "stop": "(?!@|data=|am=|{here}(?:[/?#]|$))[^/?#]",
     "dir_mode": "(?![^?#]*!3e1)(?=[^?#]*!3e([023])|)",
-    "dir_end": "(?:/(?:@|data=|am=)[^?#]*)?/?(?:[?#].*)?$"
+    "dir_end": "(?:/(?:@|data=|am=)[^?#]*)?/?(?:[?#].*)?$",
+    "here": "(?:my|current)(?:\\+|%20)location"
   },
   "rules": [
     {
@@ -45,7 +46,10 @@
       "name": "place by name",
       "find": "^{google}/maps/place/{no_api}{not_coords}{name}(?:/(?!@)[^?#]*)?(?:[?#].*)?$",
       "replace": "https://maps.apple.com/?q=$1",
-      "example": ["https://www.google.com/maps/place/Caf%C3%A9+de+Flore/data=!4m2!3m1!1s0x0:0x0", "maps://?q=Caf%C3%A9+de+Flore"]
+      "example": [
+        "https://www.google.com/maps/place/Caf%C3%A9+de+Flore/data=!4m2!3m1!1s0x0:0x0",
+        "maps://?q=Caf%C3%A9+de+Flore"
+      ]
     },
     {
       "name": "search with pin",
@@ -60,13 +64,28 @@
       "name": "search near viewport",
       "find": "^{google}/maps/search/{no_api}{not_coords}{name}/{at}{rest}",
       "replace": "https://maps.apple.com/?q=$1&sll=$2,$3",
-      "example": ["https://www.google.com/maps/search/coffee/@48.8566,2.3522,14z", "maps://?q=coffee&sll=48.8566,2.3522"]
+      "example": [
+        "https://www.google.com/maps/search/coffee/@48.8566,2.3522,14z",
+        "maps://?q=coffee&sll=48.8566,2.3522"
+      ]
     },
     {
       "name": "search by name",
       "find": "^{google}/maps/search/{no_api}{not_coords}{name}/?(?:[?#].*)?$",
       "replace": "https://maps.apple.com/?q=$1",
-      "example": ["https://www.google.com/maps/search/coffee+near+me", "maps://?q=coffee+near+me"]
+      "example": [
+        "https://www.google.com/maps/search/coffee+near+me",
+        "maps://?q=coffee+near+me"
+      ]
+    },
+    {
+      "name": "from current location",
+      "find": "^({google}/maps/dir/){here}(?=/)",
+      "replace": "$1",
+      "example": [
+        "https://www.google.com/maps/dir/My+Location/Eiffel+Tower/data=!4m2!4m1!3e2",
+        "maps://?daddr=Eiffel+Tower&dirflg=w"
+      ]
     },
     {
       "name": "directions, two stops",
@@ -81,13 +100,19 @@
       "name": "directions, one stop",
       "find": "^{google}/maps/dir/{no_api}{dir_mode}({stop}+){dir_end}",
       "replace": "https://maps.apple.com/?daddr=$2&dirflg=X$1",
-      "example": ["https://www.google.com/maps/dir/Eiffel+Tower/@48.86,2.31,14z", "maps://?daddr=Eiffel+Tower"]
+      "example": [
+        "https://www.google.com/maps/dir/Eiffel+Tower/@48.86,2.31,14z",
+        "maps://?daddr=Eiffel+Tower"
+      ]
     },
     {
       "name": "api search",
       "find": "^{google}/maps/search/?\\?{api}(?=(?:[^#]*&)?query=({not_coords_param}[^&#]+)){rest}",
       "replace": "https://maps.apple.com/?q=$1",
-      "example": ["https://www.google.com/maps/search/?api=1&query=Golden+Gate+Bridge", "maps://?q=Golden+Gate+Bridge"]
+      "example": [
+        "https://www.google.com/maps/search/?api=1&query=Golden+Gate+Bridge",
+        "maps://?q=Golden+Gate+Bridge"
+      ]
     },
     {
       "name": "api directions",
@@ -102,49 +127,73 @@
       "name": "query",
       "find": "^https?://(?:(?:www\\.)?google\\.{tld}/maps/?|maps\\.google\\.{tld}(?:/maps)?/?)\\?(?![^#]*[?&](?:api|saddr|daddr|ll|sll|center)=)(?=(?:[^#]*&)?(?:q|query)=({not_coords_param}[^&#]+)){rest}",
       "replace": "https://maps.apple.com/?q=$1",
-      "example": ["https://maps.google.com/?q=Eiffel+Tower&ftid=0x0:0x0&entry=gps", "maps://?q=Eiffel+Tower"]
+      "example": [
+        "https://maps.google.com/?q=Eiffel+Tower&ftid=0x0:0x0&entry=gps",
+        "maps://?q=Eiffel+Tower"
+      ]
     },
     {
       "name": "map view",
       "find": "^{google}/maps/{at}(?![^?#]*!3d)(?![^#]*[?&](?:api|q|query|ll|center|saddr|daddr)=){rest}",
       "replace": "https://maps.apple.com/?ll=$1,$2&q=$1,$2",
-      "example": ["https://www.google.com/maps/@48.8584,2.2945,15z", "maps://?ll=48.8584,2.2945&q=48.8584,2.2945"]
+      "example": [
+        "https://www.google.com/maps/@48.8584,2.2945,15z",
+        "maps://?ll=48.8584,2.2945&q=48.8584,2.2945"
+      ]
     },
     {
       "name": "drive",
       "find": "^({apple}.*&dirflg=)X(?:0|driving)$",
       "replace": "$1d",
-      "example": ["https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e0", "maps://?saddr=Louvre&daddr=Eiffel+Tower&dirflg=d"]
+      "example": [
+        "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e0",
+        "maps://?saddr=Louvre&daddr=Eiffel+Tower&dirflg=d"
+      ]
     },
     {
       "name": "walk",
       "find": "^({apple}.*&dirflg=)X(?:2|walking)$",
       "replace": "$1w",
-      "example": ["https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e2", "maps://?saddr=Louvre&daddr=Eiffel+Tower&dirflg=w"]
+      "example": [
+        "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e2",
+        "maps://?saddr=Louvre&daddr=Eiffel+Tower&dirflg=w"
+      ]
     },
     {
       "name": "transit",
       "find": "^({apple}.*&dirflg=)X(?:3|transit)$",
       "replace": "$1r",
-      "example": ["https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e3", "maps://?saddr=Louvre&daddr=Eiffel+Tower&dirflg=r"]
+      "example": [
+        "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/data=!4m2!4m1!3e3",
+        "maps://?saddr=Louvre&daddr=Eiffel+Tower&dirflg=r"
+      ]
     },
     {
       "name": "no mode",
       "find": "^({apple}.*)&dirflg=X$",
       "replace": "$1",
-      "example": ["https://www.google.com/maps/dir/Louvre/Eiffel+Tower/", "maps://?saddr=Louvre&daddr=Eiffel+Tower"]
+      "example": [
+        "https://www.google.com/maps/dir/Louvre/Eiffel+Tower/",
+        "maps://?saddr=Louvre&daddr=Eiffel+Tower"
+      ]
     },
     {
       "name": "no origin",
       "find": "^({apple})saddr=&",
       "replace": "$1",
-      "example": ["https://www.google.com/maps/dir//Eiffel+Tower/", "maps://?daddr=Eiffel+Tower"]
+      "example": [
+        "https://www.google.com/maps/dir//Eiffel+Tower/",
+        "maps://?daddr=Eiffel+Tower"
+      ]
     },
     {
       "name": "open the Maps app",
       "find": "^{apple}",
       "replace": "maps://?",
-      "example": ["https://www.google.com/maps/search/coffee+near+me", "maps://?q=coffee+near+me"]
+      "example": [
+        "https://www.google.com/maps/search/coffee+near+me",
+        "maps://?q=coffee+near+me"
+      ]
     }
   ]
 }

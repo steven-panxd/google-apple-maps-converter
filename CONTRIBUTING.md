@@ -6,6 +6,12 @@ Thanks for helping! The most useful contribution is a link that doesn't convert:
 
 ```sh
 npm test
+
+# Run the site locally (it imports the library from site/lib, which deploys copy in from src/)
+cp -R src site/lib && python3 -m http.server -d site 8000   # then open http://localhost:8000
+
+# Rebuild the shortcut after changing shortcut/rules.json or build.py (macOS)
+python3 shortcut/build.py
 ```
 
 | Folder | What's in it |

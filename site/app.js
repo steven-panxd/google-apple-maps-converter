@@ -1,7 +1,7 @@
-import { convert, detectAppleLinkFormat, isShortLink, toAppleMapsUrl } from './lib/index.js';
+import { convert, detectAppleLinkFormat, isShortLink, toAppleMapsUrl, unwrapConsent } from './lib/index.js';
 
-// Short-link expander (worker/). Short links can't be expanded from a web page because of CORS.
-// Empty until the worker is deployed; short links then ask the user for the full link.
+// Short-link expander, the worker's /resolve endpoint (e.g. 'https://….workers.dev/resolve'). A web
+// page can't expand short links itself because of CORS. While empty, the page asks for the full link.
 const RESOLVER = '';
 const ISSUES = 'https://github.com/steven-panxd/google-apple-maps-converter/issues/new';
 
@@ -15,14 +15,16 @@ const openBtn = /** @type {HTMLAnchorElement} */ ($('open'));
 const urlEl = /** @type {HTMLAnchorElement} */ ($('result-url'));
 const copyBtn = $('copy');
 const note = $('result-note');
+const shortHelp = $('short-help');
 
-// Classic links on iPhones older than iOS 18.4 or when the device can't be told; see the library.
+// Classic links on iPhones before iOS 18.4, on Macs, and whenever the device can't be told; see the library.
 const APPLE_FORMAT = detectAppleLinkFormat();
 
 const NAMES = { apple: 'Apple Maps', google: 'Google Maps' };
 const MODES = { driving: 'Driving', walking: 'Walking', transit: 'Transit', bicycling: 'Cycling' };
 
-let run = 0;
+/** Each update gets a number; a slower, older one finishing late must not overwrite a newer answer. */
+let latestUpdate = 0;
 
 /** Pull the first map link out of pasted text like "Meet here: https://maps.app.goo.gl/abc". */
 function extractLink(text) {
@@ -31,13 +33,7 @@ function extractLink(text) {
     text.match(/(?:https?:\/\/|maps:\/*|comgooglemaps:\/\/)[^\s<>]+/i) ??
     text.match(/(?:maps\.app\.goo\.gl|goo\.gl\/maps|maps\.apple(?:\.com)?\/|(?:www\.)?google\.[a-z.]+\/maps)[^\s<>]*/i);
   if (!m) return null;
-  const link = m[0].replace(/[.,;!?)"'”’]+$/, '');
-  // EU visitors may land on consent.google.com?continue=<real link> after a short link.
-  try {
-    const u = new URL(link);
-    if (/^consent\.google\./i.test(u.hostname) && u.searchParams.get('continue')) return u.searchParams.get('continue');
-  } catch {}
-  return link;
+  return unwrapConsent(m[0].replace(/[.,;!?)"'”’]+$/, ''));
 }
 
 /** fetch() stand-in for resolveShortLink: asks the worker, answers like a redirect. */
@@ -163,8 +159,6 @@ function showError(text) {
   setStatus(text, { error: true });
 }
 
-const shortHelp = $('short-help');
-
 /** Short links can't be opened from a page (CORS), so walk the visitor through opening one and pasting the result. */
 function showShortHelp(link) {
   result.hidden = true;
@@ -179,7 +173,7 @@ function showShortHelp(link) {
 }
 
 async function update({ go = false } = {}) {
-  const id = ++run;
+  const thisUpdate = ++latestUpdate;
   const raw = input.value.trim();
   if (!raw) {
     shortHelp.hidden = true;
@@ -194,17 +188,17 @@ async function update({ go = false } = {}) {
   if (short && !RESOLVER) return showShortHelp(link);
   if (short) setStatus('Expanding the short link…');
 
-  let r;
+  let conversion;
   try {
-    r = await convert(link, { fetch: viaResolver, appleFormat: APPLE_FORMAT });
+    conversion = await convert(link, { fetch: viaResolver, appleFormat: APPLE_FORMAT });
   } catch {
-    if (id !== run) return;
+    if (thisUpdate !== latestUpdate) return;
     return showError('Couldn’t expand this short link. Open it in your browser, then paste the full address from the address bar.');
   }
-  if (id !== run) return;
+  if (thisUpdate !== latestUpdate) return;
 
-  if (!r.url) {
-    const known = errorFor(r.parsed);
+  if (!conversion.url) {
+    const known = errorFor(conversion.parsed);
     if (known) return showError(known);
     result.hidden = true;
     setStatus(
@@ -215,27 +209,27 @@ async function update({ go = false } = {}) {
   }
 
   if (go) {
-    location.replace(r.url);
+    location.replace(conversion.url);
     return;
   }
 
-  const target = NAMES[r.to];
-  $('result-what').textContent = describe(r.parsed);
-  $('result-dest').textContent = subtitle(r.parsed, target);
-  urlEl.textContent = r.url;
-  urlEl.href = openBtn.href = r.url;
+  const target = NAMES[conversion.to];
+  $('result-what').textContent = describe(conversion.parsed);
+  $('result-dest').textContent = subtitle(conversion.parsed, target);
+  urlEl.textContent = conversion.url;
+  urlEl.href = openBtn.href = conversion.url;
   openBtn.textContent = `Open in ${target}`;
   copyBtn.textContent = 'Copy link';
 
   // Whichever format was chosen, offer the other one in case the guess about this device was wrong.
-  const lost = r.parsed.kind === 'directions' && (r.parsed.waypoints.length > 0 || r.parsed.travelMode === 'bicycling');
-  note.hidden = r.to !== 'apple';
-  if (r.to === 'apple' && APPLE_FORMAT === 'legacy') {
-    const newer = toAppleMapsUrl(r.parsed, { format: 'unified' });
+  const lost = conversion.parsed.kind === 'directions' && (conversion.parsed.waypoints.length > 0 || conversion.parsed.travelMode === 'bicycling');
+  note.hidden = conversion.to !== 'apple';
+  if (conversion.to === 'apple' && APPLE_FORMAT === 'legacy') {
+    const newer = toAppleMapsUrl(conversion.parsed, { format: 'unified' });
     const lead = lost ? 'Stops and cycling need iOS 18.4 or later.' : 'This link works on every iPhone.';
     note.replaceChildren(`${lead} On iOS 18.4 or later you can also use the `, Object.assign(document.createElement('a'), { href: newer, textContent: 'newer Apple Maps link' }), '.');
-  } else if (r.to === 'apple') {
-    const classic = toAppleMapsUrl(r.parsed, { format: 'legacy' });
+  } else if (conversion.to === 'apple') {
+    const classic = toAppleMapsUrl(conversion.parsed, { format: 'legacy' });
     note.replaceChildren('If Apple Maps opens without the place or route, use the ', Object.assign(document.createElement('a'), { href: classic, textContent: 'classic Apple Maps link' }), '.');
   }
 
@@ -243,7 +237,7 @@ async function update({ go = false } = {}) {
   shortHelp.hidden = true;
   const wasHidden = result.hidden;
   result.hidden = false;
-  drawMap(pointOf(r.parsed));
+  drawMap(pointOf(conversion.parsed));
   if (wasHidden) {
     result.classList.remove('arrive');
     void result.offsetWidth;
@@ -253,14 +247,14 @@ async function update({ go = false } = {}) {
 }
 
 let timer;
-input.addEventListener('input', () => {
+input.addEventListener('input', (e) => {
   clearTimeout(timer);
-  timer = setTimeout(update, 200);
+  // Typing waits for a pause; a paste is complete, so convert it straight away.
+  timer = setTimeout(update, /** @type {InputEvent} */ (e).inputType === 'insertFromPaste' ? 0 : 200);
 });
-input.addEventListener('paste', () => setTimeout(update, 0));
 
-// Ask for a star once the converter has actually helped (the visitor opened or copied a link),
-// never twice on the same device after a dismiss or a click through.
+// Ask for a star once the converter has actually helped: the visitor opened or copied a link, or
+// came from a ?url= link (the shortcut's fallback). Never again on this device after a dismiss or a click through.
 const starAsk = $('star-ask');
 const STAR_KEY = 'gamc-star-ask';
 function starAskDone() {

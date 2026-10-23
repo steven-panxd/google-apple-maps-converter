@@ -268,3 +268,13 @@ test('non-Google and look-alike hosts are rejected', () => {
 test('out-of-range coordinates are ignored', () => {
   assert.equal(parse('https://www.google.com/maps/@95,200,3z').kind, 'unsupported');
 });
+
+test('directions need somewhere to go; "current location" in between is dropped', () => {
+  assert.equal(parse('https://maps.google.com/?saddr=Paris').reason, 'missing-destination');
+  assert.equal(parse('https://maps.google.com/?saddr=Paris&daddr=').reason, 'missing-destination');
+  assert.equal(parse('https://www.google.com/maps/dir/Paris/My+Location/').reason, 'missing-destination');
+  assert.deepEqual(parse('https://www.google.com/maps/dir/Paris/My+Location/Lyon/').waypoints, []);
+  assert.deepEqual(parse('https://www.google.com/maps/dir/?api=1&destination=Lyon&waypoints=My+Location|Dijon').waypoints, [
+    { query: 'Dijon' },
+  ]);
+});

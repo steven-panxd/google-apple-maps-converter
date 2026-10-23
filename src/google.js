@@ -3,7 +3,7 @@
  * Builder output follows the official Maps URLs API: https://developers.google.com/maps/documentation/urls
  */
 import {
-  NUM_PATTERN as NUM,
+  NUM,
   buildUrl,
   decodeSegment,
   encodeParam,
@@ -20,7 +20,7 @@ import {
   withZoom,
 } from './util.js';
 
-/** @typedef {import('./util.js').ParsedLink} ParsedLink @typedef {import('./util.js').TravelMode} TravelMode */
+/** @typedef {import('./util.js').ParsedLink} ParsedLink @typedef {import('./util.js').TravelMode} TravelMode @typedef {import('./util.js').Location} Location */
 
 // google.com, google.de, google.co.uk, google.com.hk, ...
 const GOOGLE_HOST = /^(?:www\.|maps\.)?google\.(?:[a-z]{2,3}|com?\.[a-z]{2})$/i;
@@ -62,81 +62,19 @@ export function parseGoogleMapsUrl(url) {
   if (isGoogleShortURL(u)) return { kind: 'short', url: u.href };
   if (!isGoogleMapsURL(u)) return unsupported('not-google-maps');
 
-  const params = u.searchParams;
   const path = u.pathname.replace(/^\/maps(?=\/|$)/, '');
   const segments = path.split('/').slice(1);
   if (path.endsWith('/')) segments.pop();
-  const head = segments[0] ?? '';
-
-  const at = parseAtSegment(segments);
-  const pin = matchCoords(DATA_PIN, u.pathname);
-
-  if (params.get('api') === '1') {
-    if (head === 'dir') return parseApiDirections(params);
-    if (head === 'search') {
-      const query = params.get('query') ?? '';
-      const coords = parseCoordText(query);
-      if (coords) return { kind: 'coords', ...coords };
-      if (query) return { kind: 'search', query };
-      return unsupported(params.has('query_place_id') ? 'place-id-requires-lookup' : 'empty-query');
-    }
-    const center = parseCoordText(params.get('center'));
-    if (center) return withZoom({ kind: 'coords', ...center }, Number(params.get('zoom')));
-  }
-
-  switch (head) {
-    case 'place': {
-      const name = decodeSegment(segments[1] ?? '');
-      const fromName = parseCoordText(name);
-      if (fromName && !pin) return withZoom({ kind: 'coords', ...fromName }, at?.zoom);
-      const coords = pin ?? fromName ?? at;
-      if (!name && coords) return withZoom({ kind: 'coords', lat: coords.lat, lng: coords.lng }, at?.zoom);
-      if (!name) break;
-      return withZoom({ kind: 'place', name, ...latLng(coords) }, at?.zoom);
-    }
-    case 'search': {
-      const query = decodeSegment(segments[1] ?? '');
-      const fromQuery = parseCoordText(query);
-      if (fromQuery) return withZoom({ kind: 'coords', ...fromQuery }, at?.zoom);
-      // A search that resolved to a single result carries that result's pin.
-      if (pin && query) return withZoom({ kind: 'place', name: query, ...pin }, at?.zoom);
-      if (!query) break;
-      return withZoom({ kind: 'search', query, ...(at && { near: latLng(at) }) }, at?.zoom);
-    }
-    case 'dir':
-      return parsePathDirections(segments.slice(1), u.pathname);
-  }
-
-  // Legacy query-string forms (also used by the comgooglemaps:// app scheme).
-  const saddr = params.get('saddr');
-  const daddr = params.get('daddr');
-  if (daddr !== null || saddr !== null) {
-    const stops = (daddr ?? '').split(/\s+to:\s*/i).map(toLocation);
-    return {
-      kind: 'directions',
-      origin: toLocation(saddr),
-      destination: stops.pop() ?? null,
-      waypoints: stops,
-      ...travelMode(legacyMode(params.get('dirflg') ?? params.get('directionsmode'))),
-    };
-  }
-
-  const z = Number(params.get('z') ?? params.get('zoom')) || at?.zoom;
-  const q = params.get('q') ?? params.get('query');
-  if (q) {
-    const coords = parseCoordText(q);
-    if (coords) return withZoom({ kind: 'coords', ...coords }, z);
-    const near = parseCoordText(params.get('ll') ?? params.get('sll') ?? params.get('center')) ?? latLng(at);
-    return withZoom({ kind: 'search', query: q, ...(near && { near }) }, z);
-  }
-
-  const ll = parseCoordText(params.get('ll') ?? params.get('center'));
-  if (ll) return withZoom({ kind: 'coords', ...ll }, z);
-
-  if (pin) return withZoom({ kind: 'coords', ...pin }, at?.zoom);
-  if (at) return withZoom({ kind: 'coords', lat: at.lat, lng: at.lng }, at.zoom);
-  if (params.has('cid') || params.has('ftid')) return unsupported('place-id-requires-lookup');
-  return unsupported('unrecognized-format');
+  /** @type {GoogleLink} */
+  const link = {
+    params: u.searchParams,
+    segments,
+    rawPath: u.pathname,
+    at: parseAtSegment(segments),
+    pin: matchCoords(DATA_PIN, u.pathname),
+  };
+  // Maps URLs API links first, then /place/, /search/ and /dir/ paths, then the classic query string.
+  return (link.params.get('api') === '1' && parseApiLink(link)) || parsePathLink(link) || parseQueryLink(link);
 }
 
 /**
@@ -175,6 +113,95 @@ export function toGoogleMapsUrl(parsed) {
 
 // --- internals ---------------------------------------------------------------
 
+/**
+ * @typedef {{ params: URLSearchParams, segments: string[], rawPath: string,
+ *   at: { lat: number, lng: number, zoom?: number } | null, pin: { lat: number, lng: number } | null }} GoogleLink
+ *   `segments` is the path after /maps; `at` is the @lat,lng,zoom viewport; `pin` the place pin in `data=`.
+ */
+
+/** ?api=1 links (https://developers.google.com/maps/documentation/urls). @param {GoogleLink} link @returns {ParsedLink | null} */
+function parseApiLink({ params, segments }) {
+  const head = segments[0] ?? '';
+  if (head === 'dir') return parseApiDirections(params);
+  if (head === 'search') {
+    const query = params.get('query') ?? '';
+    const coords = parseCoordText(query);
+    if (coords) return { kind: 'coords', ...coords };
+    if (query) return { kind: 'search', query };
+    return unsupported(params.has('query_place_id') ? 'place-id-requires-lookup' : 'empty-query');
+  }
+  const center = parseCoordText(params.get('center'));
+  return center ? withZoom({ kind: 'coords', ...center }, Number(params.get('zoom'))) : null;
+}
+
+/** /maps/place/<name>/..., /maps/search/<query>/..., /maps/dir/<stops>/... @param {GoogleLink} link @returns {ParsedLink | null} */
+function parsePathLink({ segments, rawPath, at, pin }) {
+  switch (segments[0]) {
+    case 'place': {
+      const name = decodeSegment(segments[1] ?? '');
+      const fromName = parseCoordText(name);
+      if (fromName && !pin) return withZoom({ kind: 'coords', ...fromName }, at?.zoom);
+      const coords = pin ?? fromName ?? at;
+      if (!name && coords) return withZoom({ kind: 'coords', lat: coords.lat, lng: coords.lng }, at?.zoom);
+      if (!name) return null;
+      return withZoom({ kind: 'place', name, ...latLng(coords) }, at?.zoom);
+    }
+    case 'search': {
+      const query = decodeSegment(segments[1] ?? '');
+      const fromQuery = parseCoordText(query);
+      if (fromQuery) return withZoom({ kind: 'coords', ...fromQuery }, at?.zoom);
+      // A search that resolved to a single result carries that result's pin.
+      if (pin && query) return withZoom({ kind: 'place', name: query, ...pin }, at?.zoom);
+      if (!query) return null;
+      return withZoom({ kind: 'search', query, ...(at && { near: latLng(at) }) }, at?.zoom);
+    }
+    case 'dir':
+      return parsePathDirections(segments.slice(1), rawPath);
+    default:
+      return null;
+  }
+}
+
+/** Classic query strings (?q=, ?ll=, ?saddr=&daddr=), also used by comgooglemaps://, and bare @lat,lng views. @param {GoogleLink} link @returns {ParsedLink} */
+function parseQueryLink({ params, at, pin }) {
+  const saddr = params.get('saddr');
+  const daddr = params.get('daddr');
+  if (daddr !== null || saddr !== null) {
+    const stops = (daddr ?? '').split(/\s+to:\s*/i).map(toLocation);
+    const destination = stops.pop() ?? null;
+    if (!destination) return unsupported('missing-destination');
+    return {
+      kind: 'directions',
+      origin: toLocation(saddr),
+      destination,
+      waypoints: withoutCurrentLocation(stops),
+      ...travelMode(googleDirFlag(params.get('dirflg') ?? params.get('directionsmode'))),
+    };
+  }
+
+  const z = Number(params.get('z') ?? params.get('zoom')) || at?.zoom;
+  const q = params.get('q') ?? params.get('query');
+  if (q) {
+    const coords = parseCoordText(q);
+    if (coords) return withZoom({ kind: 'coords', ...coords }, z);
+    const near = parseCoordText(params.get('ll') ?? params.get('sll') ?? params.get('center')) ?? latLng(at);
+    return withZoom({ kind: 'search', query: q, ...(near && { near }) }, z);
+  }
+
+  const ll = parseCoordText(params.get('ll') ?? params.get('center'));
+  if (ll) return withZoom({ kind: 'coords', ...ll }, z);
+
+  if (pin) return withZoom({ kind: 'coords', ...pin }, at?.zoom);
+  if (at) return withZoom({ kind: 'coords', lat: at.lat, lng: at.lng }, at.zoom);
+  if (params.has('cid') || params.has('ftid')) return unsupported('place-id-requires-lookup');
+  return unsupported('unrecognized-format');
+}
+
+/** "Current location" in the middle of a route means nothing; the Apple parser drops it too. @param {Location[]} stops */
+function withoutCurrentLocation(stops) {
+  return /** @type {Exclude<Location, null>[]} */ (stops.filter(Boolean));
+}
+
 /** @param {'place' | 'search'} type @param {string} text @param {{ lat: number, lng: number }} at @param {number} zoom */
 function pathUrl(type, text, at, zoom) {
   return `https://www.google.com/maps/${type}/${encodeParam(text, '+')}/@${formatCoords(at)},${Math.round(zoom)}z`;
@@ -194,7 +221,7 @@ function parseAtSegment(segments) {
 }
 
 /** Google legacy dirflg (w walking, r transit, b bicycling; h/t are avoid-flags) or app `directionsmode`. @param {string | null} flags @returns {TravelMode | undefined} */
-function legacyMode(flags) {
+function googleDirFlag(flags) {
   if (!flags) return undefined;
   const f = flags.toLowerCase();
   if (API_MODES.has(f)) return /** @type {TravelMode} */ (f);
@@ -208,7 +235,7 @@ function legacyMode(flags) {
 /** @param {URLSearchParams} params @returns {ParsedLink} */
 function parseApiDirections(params) {
   const mode = params.get('travelmode')?.toLowerCase();
-  const waypoints = (params.get('waypoints') ?? '').split('|').filter((w) => w.trim()).map(toLocation);
+  const waypoints = withoutCurrentLocation((params.get('waypoints') ?? '').split('|').map(toLocation));
   const destination = toLocation(params.get('destination'));
   if (!destination) return unsupported('missing-destination');
   return {
@@ -230,5 +257,6 @@ function parsePathDirections(segments, rawPath) {
   // A single stop is the place the user wants to go to.
   const origin = stops.length > 1 ? stops.shift() ?? null : null;
   const destination = stops.pop() ?? null;
-  return { kind: 'directions', origin, destination, waypoints: stops, ...travelMode(mode) };
+  if (!destination) return unsupported('missing-destination');
+  return { kind: 'directions', origin, destination, waypoints: withoutCurrentLocation(stops), ...travelMode(mode) };
 }

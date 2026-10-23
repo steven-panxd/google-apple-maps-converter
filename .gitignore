@@ -3,3 +3,5 @@ node_modules/
 *.log
 .wrangler/
 .taste-skill/
+site/lib/
+__pycache__/

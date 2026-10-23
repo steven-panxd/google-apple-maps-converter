@@ -68,17 +68,18 @@ export async function resolveShortLink(url, { fetch: fetchImpl = globalThis.fetc
       // Browsers hide manual redirect targets; let fetch follow and read the final URL.
       current = (await fetchImpl(current, { redirect: 'follow', signal })).url || current;
     } else {
-      break;
+      throw new Error(`Short link did not redirect: ${url}`);
     }
     current = unwrapConsent(current);
     if (!isShortLink(current)) return current;
   }
-  throw new Error(`Short link did not redirect: ${url}`);
+  throw new Error(`Short link still pointed at another short link after ${maxRedirects} redirects: ${url}`);
 }
 
 /**
  * One-stop conversion: detects the source, expands short links if needed, and builds the target URL.
- * `url` is null when the link can't be converted; `parsed.reason` says why.
+ * `url` is null when the link can't be converted; `parsed.reason` says why. Rejects only when a short
+ * link can't be expanded.
  *
  * @param {string} input
  * @param {{ to?: Provider | 'auto', appleFormat?: 'unified' | 'legacy' | 'auto', device?: import('./apple.js').Device, fetch?: typeof fetch, signal?: AbortSignal }} [options]
@@ -87,7 +88,7 @@ export async function resolveShortLink(url, { fetch: fetchImpl = globalThis.fetc
  * @returns {Promise<{ url: string | null, from: Provider | null, to: Provider, parsed: ParsedLink, resolvedUrl: string }>}
  */
 export async function convert(input, { to = 'auto', appleFormat, device, ...fetchOptions } = {}) {
-  let resolvedUrl = input.trim();
+  let resolvedUrl = typeof input === 'string' ? input.trim() : '';
   const from = detectProvider(resolvedUrl);
   let parsed = parseMapsUrl(resolvedUrl);
   if (parsed.kind === 'short') {
@@ -100,8 +101,12 @@ export async function convert(input, { to = 'auto', appleFormat, device, ...fetc
   return { url, from, to: target, parsed, resolvedUrl };
 }
 
-/** EU users may get bounced through consent.google.com?continue=<real url>. @param {string} url */
-function unwrapConsent(url) {
+/**
+ * EU visitors may land on consent.google.com?continue=<real link>; returns the real link, or `url` as is.
+ * @param {string} url
+ * @returns {string}
+ */
+export function unwrapConsent(url) {
   const u = toURL(url);
   const next = u && CONSENT_HOST.test(u.hostname) ? u.searchParams.get('continue') : null;
   return next ?? url;

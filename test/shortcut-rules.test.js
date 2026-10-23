@@ -44,6 +44,9 @@ const EXTRA = [
   'https://www.google.com/maps/dir/Eiffel+Tower/@48.86,2.31,14z',
   'https://www.google.com/maps/dir/48.8606,2.3376/48.8584,2.2945/data=!3e2',
   'https://www.google.com/maps/dir/Louvre/Pantheon/Eiffel+Tower/',
+  'https://www.google.com/maps/dir/My+Location/Eiffel+Tower/@48.86,2.31,14z/data=!4m2!4m1!3e2',
+  'https://www.google.com/maps/dir/Paris/My+Location/',
+  'https://www.google.com/maps/dir/Current+Location/Louvre/Eiffel+Tower/',
   'https://www.google.com/maps/search/?api=1&query=Golden+Gate+Bridge',
   'https://www.google.com/maps/search/?query=Golden+Gate+Bridge&api=1&query_place_id=abc',
   'https://www.google.com/maps/search/?api=1&query=48.8584%2C2.2945',
@@ -80,10 +83,8 @@ test('shortcut rules agree with the library on every Google link they convert', 
   let converted = 0;
   for (const url of samples()) {
     const out = applyRules(url);
-    if (!out.startsWith(MAPS_APP)) {
-      assert.equal(out, url, `a rule half-matched ${url}`);
-      continue;
-    }
+    // Not converted: the shortcut sends the original link to the web converter.
+    if (!out.startsWith(MAPS_APP)) continue;
     converted++;
     assert.doesNotMatch(out, /dirflg=X/, `unmapped travel mode for ${url}`);
     const expected = toAppleMapsUrl(parseGoogleMapsUrl(url), { format: 'legacy' });
@@ -107,6 +108,7 @@ test('shortcut rules leave the rest to the web converter', () => {
     'https://www.google.com/maps/search/48.8584,+2.2945', // coordinates as text
     'https://consent.google.com/ml?continue=https://www.google.com/maps/place/Eiffel',
     'https://maps.app.goo.gl/abc123',
+    'https://www.google.com/maps/dir/Paris/My+Location/', // the library rejects it too
   ]) {
     assert.equal(applyRules(url), url);
   }
