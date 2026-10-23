@@ -146,14 +146,29 @@ function errorFor(parsed) {
 }
 
 function showError(text) {
+  shortHelp.hidden = true;
   result.hidden = true;
   setStatus(text, { error: true });
+}
+
+const shortHelp = $('short-help');
+
+/** Short links can't be opened from a page (CORS), so walk the visitor through opening one and pasting the result. */
+function showShortHelp(link) {
+  result.hidden = true;
+  setStatus('');
+  /** @type {HTMLAnchorElement} */ ($('short-open')).href = link;
+  $('short-addr').textContent = /maps\.apple/i.test(link)
+    ? 'maps.apple.com/place?coordinate=37.334859,-122.009040&name=…'
+    : 'google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=…';
+  shortHelp.hidden = false;
 }
 
 async function update({ go = false } = {}) {
   const id = ++run;
   const raw = input.value.trim();
   if (!raw) {
+    shortHelp.hidden = true;
     result.hidden = true;
     setStatus('');
     return;
@@ -162,9 +177,7 @@ async function update({ go = false } = {}) {
   if (!link) return showError('Paste a full link, starting with https://');
 
   const short = isShortLink(link);
-  if (short && !RESOLVER) {
-    return showError('Short links can’t be expanded here yet. Open the link in your browser, then paste the full address from the address bar. The iPhone shortcut below handles short links.');
-  }
+  if (short && !RESOLVER) return showShortHelp(link);
   if (short) setStatus('Expanding the short link…');
 
   let r;
@@ -213,6 +226,7 @@ async function update({ go = false } = {}) {
   }
 
   setStatus('');
+  shortHelp.hidden = true;
   const wasHidden = result.hidden;
   result.hidden = false;
   drawMap(pointOf(r.parsed));

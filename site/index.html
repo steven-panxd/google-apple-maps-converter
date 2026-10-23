@@ -103,6 +103,22 @@
 
       <p class="status" id="status" role="status" aria-live="polite"></p>
 
+      <div class="short-help" id="short-help" hidden>
+        <h2 class="short-help-title">This is a short link</h2>
+        <p>Short links hide the place until they're opened, and a web page isn't allowed to open them for you. It takes three steps:</p>
+        <ol>
+          <li><a class="button" id="short-open" href="#" target="_blank" rel="noopener">Open the short link ↗</a></li>
+          <li>When the map has loaded, copy the address from the address bar.
+            <div class="addr" aria-hidden="true">
+              <span class="addr-lock">🔒</span><span class="addr-url" id="short-addr">google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=…</span>
+            </div>
+            <span class="fine">Click the address bar, then press <kbd>⌘</kbd> <kbd>C</kbd> (or <kbd>Ctrl</kbd> <kbd>C</kbd>).</span>
+          </li>
+          <li>Come back here and paste it into the box above.</li>
+        </ol>
+        <p class="fine">On iPhone, the <a href="shortcut/">iPhone shortcut</a> opens short links in one tap.</p>
+      </div>
+
       <article class="answer" id="result" hidden>
         <div class="answer-map" id="result-map" hidden>
           <span class="answer-pin" aria-hidden="true"></span>

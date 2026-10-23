@@ -103,6 +103,24 @@ h1 { font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem); font-weight: 700; }
 
 .status { min-height: 1.6em; margin: 12px 0 0; color: var(--error); font-size: 0.9375rem; }
 
+/* Guide for short links, which a page can't expand (CORS). */
+.short-help { margin-top: 4px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.short-help[hidden] { display: none; }
+.short-help-title { font-size: 1.25rem; margin-bottom: 8px; }
+.short-help ol { margin: 12px 0 0; padding-left: 1.4em; }
+.short-help li { margin-bottom: 14px; padding-left: 4px; }
+.short-help li::marker { font-weight: 600; }
+.short-help .fine { display: block; margin-top: 6px; }
+.addr {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px; max-width: 100%;
+  padding: 8px 12px; background: var(--tone); border-radius: 999px;
+  font: 0.8125rem/1.3 var(--mono); color: var(--ink);
+  outline: 2px solid var(--ink); outline-offset: 2px;
+}
+.addr-lock { font-size: 0.75rem; flex: none; }
+.addr-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+kbd { font: 600 0.8125rem/1 var(--mono); padding: 2px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--surface); }
+
 .answer { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .answer[hidden] { display: none; }
 .answer-map { position: relative; height: 200px; overflow: hidden; background: var(--map-bg); }
