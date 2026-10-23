@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """Build the "Open in Apple Maps" iOS Shortcut.
 
-Flow: share-sheet input (or clipboard) -> first URL -> Expand URL (follows short links)
--> the regex rules in rules.json, which turn everyday Google Maps links into Apple Maps links
-on the device -> open that in Apple Maps. Anything the rules leave alone goes to the web
-converter with &go=1, which handles every format the library knows. Shared text without a link
-(an address, a place name) is searched in Apple Maps.
+What the shortcut does with what it's given (share sheet input, or the clipboard):
+
+    link in it?  no  -> search the text in Apple Maps (a shared address, a place name)
+                 yes -> take the first link
+                        short link (goo.gl)? -> ask Google where it points; full links stay on the phone
+                        run the regex rules in rules.json
+                        maps://...?    yes -> open it in the Maps app
+                                       no  -> open the web converter, which knows every format
 
 Usage (macOS): python3 shortcut/build.py   -> writes "site/Open in Apple Maps.shortcut" (signed).
 The file name becomes the shortcut's name when someone imports it.
 """
 import json
 import plistlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -20,118 +24,143 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "site" / "Open in Apple Maps.shortcut"
+RULES_FILE = ROOT / "shortcut" / "rules.json"
 CONVERTER = "https://maps.xuedo.ng/"
-RULES = json.loads((ROOT / "shortcut" / "rules.json").read_text())["rules"]
-APPLE = "https://maps.apple.com/"
+MAPS_APP = "maps://"
+
+# Shortcuts' condition codes.
+CONTAINS = 99
 BEGINS_WITH = 8
 HAS_ANY_VALUE = 100
 
-
-def action(identifier, **params):
-    return {"WFWorkflowActionIdentifier": identifier, "WFWorkflowActionParameters": params}
+SHORTCUT_INPUT = {"Type": "ExtensionInput"}
 
 
-def text_with(before, attachment, after=""):
-    # Text parameters hold variables as U+FFFC placeholders at a UTF-16 offset.
+def load_rules():
+    """rules.json, with each {part} in a pattern filled in."""
+    data = json.loads(RULES_FILE.read_text())
+
+    def expand(pattern):
+        while True:
+            filled = re.sub(r"\{([a-z_]+)\}", lambda m: data["parts"][m.group(1)], pattern)
+            if filled == pattern:
+                return pattern
+            pattern = filled
+
+    return [{**rule, "find": expand(rule["find"])} for rule in data["rules"]]
+
+
+# --- Shortcut file format ----------------------------------------------------------------------
+# Imported shortcuts don't connect actions on their own, so every input names its source.
+
+
+def text(variable, before="", after=""):
+    """A text parameter holding a variable (a U+FFFC placeholder at its UTF-16 offset)."""
     offset = len(before.encode("utf-16-le")) // 2
     return {
         "WFSerializationType": "WFTextTokenString",
-        "Value": {"string": f"{before}\ufffc{after}", "attachmentsByRange": {f"{{{offset}, 1}}": attachment}},
+        "Value": {"string": f"{before}￼{after}", "attachmentsByRange": {f"{{{offset}, 1}}": variable}},
     }
 
 
-def output(output_uuid, output_name):
-    return {"Type": "ActionOutput", "OutputUUID": output_uuid, "OutputName": output_name}
-
-
-def output_of(output_uuid, output_name):
-    # List and content parameters hold a single variable instead of text.
-    return {"WFSerializationType": "WFTextTokenAttachment", "Value": output(output_uuid, output_name)}
+def value(variable):
+    """A list or content parameter holding a single variable."""
+    return {"WFSerializationType": "WFTextTokenAttachment", "Value": variable}
 
 
 def new_id():
     return str(uuid.uuid4()).upper()
 
 
-def build():
-    ids = {name: new_id() for name in ["links", "first", "expand", "encode", "text", "open", "web"]}
-    group = new_id()
-    has_link = new_id()
-    # Imported shortcuts don't auto-connect actions, so every input is wired explicitly.
-    actions = [
-        action(
-            "is.workflow.actions.detect.link",
-            UUID=ids["links"],
-            WFInput=text_with("", {"Type": "ExtensionInput"}),
-        ),
-        action(
-            "is.workflow.actions.conditional",
-            GroupingIdentifier=has_link,
-            WFControlFlowMode=0,
-            WFCondition=HAS_ANY_VALUE,
-            WFInput={"Type": "Variable", "Variable": output_of(ids["links"], "URLs")},
-        ),
-        action(
-            "is.workflow.actions.getitemfromlist",
-            UUID=ids["first"],
-            WFItemSpecifier="First Item",
-            WFInput=output_of(ids["links"], "URLs"),
-        ),
-        action("is.workflow.actions.url.expand", UUID=ids["expand"], URL=text_with("", output(ids["first"], "Item from List"))),
-    ]
-    link = output(ids["expand"], "Expanded URL")
-    for rule in RULES:
-        rule_id = new_id()
-        actions.append(
-            action(
-                "is.workflow.actions.text.replace",
-                UUID=rule_id,
-                CustomOutputName=rule["name"],
-                WFInput=text_with("", link),
-                WFReplaceTextFind=rule["find"],
-                WFReplaceTextReplace=rule["replace"],
-                WFReplaceTextRegularExpression=True,
-                WFReplaceTextCaseSensitive=False,
-            )
+class Shortcut:
+    def __init__(self):
+        self.actions = []
+
+    def add(self, name, output=None, **params):
+        """Append an action; returns a reference to its output when `output` names it."""
+        action_id = new_id()
+        params["UUID"] = action_id
+        if output:
+            params.setdefault("CustomOutputName", output)
+        self.actions.append({"WFWorkflowActionIdentifier": f"is.workflow.actions.{name}", "WFWorkflowActionParameters": params})
+        return {"Type": "ActionOutput", "OutputUUID": action_id, "OutputName": output} if output else None
+
+    def if_(self, variable, condition, compare_to=None):
+        group = new_id()
+        params = {"WFInput": {"Type": "Variable", "Variable": value(variable)}, "WFCondition": condition}
+        if compare_to is not None:
+            params["WFConditionalActionString"] = compare_to
+        self.add("conditional", GroupingIdentifier=group, WFControlFlowMode=0, **params)
+        return group
+
+    def otherwise(self, group):
+        self.add("conditional", GroupingIdentifier=group, WFControlFlowMode=1)
+
+    def end_if(self, group):
+        """Ends the block; returns its result (the last output of whichever branch ran)."""
+        return self.add("conditional", "If Result", GroupingIdentifier=group, WFControlFlowMode=2)
+
+
+# --- What the shortcut does --------------------------------------------------------------------
+
+
+def where_short_links_point(s, link):
+    """Only short links need Google to say where they point, so full links never leave the phone."""
+    short = s.if_(link, CONTAINS, "goo.gl")
+    s.add("url.expand", "Expanded URL", URL=text(link))
+    s.otherwise(short)
+    s.add("gettext", "Link", WFTextActionText=text(link))
+    return s.end_if(short)
+
+
+def convert_on_device(s, link):
+    for rule in load_rules():
+        link = s.add(
+            "text.replace",
+            rule["name"],
+            WFInput=text(link),
+            WFReplaceTextFind=rule["find"],
+            WFReplaceTextReplace=rule["replace"],
+            WFReplaceTextRegularExpression=True,
+            WFReplaceTextCaseSensitive=False,
         )
-        link = output(rule_id, rule["name"])
-    actions += [
-        # Converted on the device: straight to Apple Maps, no website involved.
-        action(
-            "is.workflow.actions.conditional",
-            GroupingIdentifier=group,
-            WFControlFlowMode=0,
-            WFCondition=BEGINS_WITH,
-            WFConditionalActionString=APPLE,
-            WFInput={"Type": "Variable", "Variable": {"WFSerializationType": "WFTextTokenAttachment", "Value": link}},
-        ),
-        action("is.workflow.actions.openurl", UUID=ids["open"], WFInput=text_with("", link)),
-        action("is.workflow.actions.conditional", GroupingIdentifier=group, WFControlFlowMode=1),
-        # Everything else: the web converter knows every format the library does.
-        action(
-            "is.workflow.actions.urlencode",
-            UUID=ids["encode"],
-            WFEncodeMode="Encode",
-            WFInput=text_with("", output(ids["expand"], "Expanded URL")),
-        ),
-        action(
-            "is.workflow.actions.gettext",
-            UUID=ids["text"],
-            WFTextActionText=text_with(f"{CONVERTER}?url=", output(ids["encode"], "URL Encoded Text"), "&go=1"),
-        ),
-        action("is.workflow.actions.openurl", UUID=ids["web"], WFInput=output_of(ids["text"], "Text")),
-        action("is.workflow.actions.conditional", GroupingIdentifier=group, WFControlFlowMode=2),
-        # No link at all, e.g. a shared address: search it in Apple Maps. This Maps action is also
-        # what lets the shortcut show the Apple Maps icon instead of Safari's.
-        action("is.workflow.actions.conditional", GroupingIdentifier=has_link, WFControlFlowMode=1),
-        action("is.workflow.actions.searchmaps", WFInput=text_with("", {"Type": "ExtensionInput"})),
-        action("is.workflow.actions.conditional", GroupingIdentifier=has_link, WFControlFlowMode=2),
-    ]
+    return link
+
+
+def open_web_converter(s, link):
+    encoded = s.add("urlencode", "URL Encoded Text", WFEncodeMode="Encode", WFInput=text(link))
+    url = s.add("gettext", "Converter URL", WFTextActionText=text(encoded, before=f"{CONVERTER}?url=", after="&go=1"))
+    s.add("openurl", WFInput=value(url))
+
+
+def build():
+    s = Shortcut()
+    links = s.add("detect.link", "URLs", WFInput=text(SHORTCUT_INPUT))
+
+    has_link = s.if_(links, HAS_ANY_VALUE)
+    first = s.add("getitemfromlist", "First Link", WFItemSpecifier="First Item", WFInput=value(links))
+    link = where_short_links_point(s, first)
+    converted = convert_on_device(s, link)
+    on_device = s.if_(converted, BEGINS_WITH, MAPS_APP)
+    s.add("openurl", WFInput=text(converted))
+    s.otherwise(on_device)
+    open_web_converter(s, link)
+    s.end_if(on_device)
+
+    s.otherwise(has_link)
+    # Also gives the shortcut actions from two apps, which keeps iOS from showing Safari's icon
+    # in place of the shortcut's own when it's installed from iCloud.
+    s.add("searchmaps", WFInput=text(SHORTCUT_INPUT))
+    s.end_if(has_link)
+
+    # Return nothing, or iOS asks whether the shortcut may "output" the link.
+    s.add("nothing")
+
     return {
         "WFWorkflowClientVersion": "2607.0.1",
         "WFWorkflowMinimumClientVersion": 900,
         "WFWorkflowMinimumClientVersionString": "900",
-        "WFWorkflowIcon": {"WFWorkflowIconStartColor": 463140863, "WFWorkflowIconGlyphNumber": 59769},  # blue map pin, matches the logo arrow
+        "WFWorkflowIcon": {"WFWorkflowIconStartColor": 463140863, "WFWorkflowIconGlyphNumber": 59769},  # blue map pin
         "WFWorkflowImportQuestions": [],
         "WFWorkflowTypes": ["ActionExtension"],
         "WFWorkflowInputContentItemClasses": ["WFURLContentItem", "WFStringContentItem", "WFSafariWebPageContentItem"],
@@ -139,13 +168,13 @@ def build():
         "WFWorkflowHasShortcutInputVariables": True,
         "WFWorkflowNoInputBehavior": {"Name": "WFWorkflowNoInputBehaviorGetClipboard", "Parameters": {}},
         "WFQuickActionSurfaces": [],
-        "WFWorkflowActions": actions,
+        "WFWorkflowActions": s.actions,
     }
 
 
 def main():
     with tempfile.TemporaryDirectory() as tmp:
-        unsigned = Path(tmp) / "Open in Apple Maps.shortcut"
+        unsigned = Path(tmp) / OUT.name
         unsigned.write_bytes(plistlib.dumps(build(), fmt=plistlib.FMT_BINARY))
         result = subprocess.run(
             ["shortcuts", "sign", "--mode", "anyone", "--input", str(unsigned), "--output", str(OUT)],

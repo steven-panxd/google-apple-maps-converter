@@ -3,17 +3,25 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { parseAppleMapsUrl, parseGoogleMapsUrl, toAppleMapsUrl } from '../src/index.js';
 
-const { rules } = JSON.parse(readFileSync(new URL('../shortcut/rules.json', import.meta.url), 'utf8'));
-const compiled = rules.map((r) => ({ ...r, re: new RegExp(r.find, 'i') }));
+const { parts, rules } = JSON.parse(readFileSync(new URL('../shortcut/rules.json', import.meta.url), 'utf8'));
 
-/** What the shortcut does on the device: every rule in turn. */
+/** Fills in each {part}, as shortcut/build.py does. */
+function expand(pattern) {
+  const filled = pattern.replace(/\{([a-z_]+)\}/g, (_, name) => parts[name]);
+  return filled === pattern ? pattern : expand(filled);
+}
+
+const compiled = rules.map((r) => ({ ...r, re: new RegExp(expand(r.find), 'i') }));
+const MAPS_APP = 'maps://?';
+
+/** What the shortcut does on the phone: every rule in turn. */
 function applyRules(url) {
   return compiled.reduce((text, r) => text.replace(r.re, r.replace), url);
 }
 
 /** Zoom is a viewport hint the shortcut drops; everything else must match. */
 function meaning(appleUrl) {
-  const { zoom, ...rest } = parseAppleMapsUrl(appleUrl);
+  const { zoom, ...rest } = parseAppleMapsUrl(appleUrl.replace(MAPS_APP, 'https://maps.apple.com/?'));
   return rest;
 }
 
@@ -72,7 +80,7 @@ test('shortcut rules agree with the library on every Google link they convert', 
   let converted = 0;
   for (const url of samples()) {
     const out = applyRules(url);
-    if (!out.startsWith('https://maps.apple.com/')) {
+    if (!out.startsWith(MAPS_APP)) {
       assert.equal(out, url, `a rule half-matched ${url}`);
       continue;
     }
@@ -85,17 +93,11 @@ test('shortcut rules agree with the library on every Google link they convert', 
   assert.ok(converted >= 25, `only ${converted} links converted on the device`);
 });
 
-test('shortcut rules convert the everyday links on the device', () => {
-  const cases = {
-    'https://www.google.com/maps/place/Golden+Gate+Bridge/@37.8199286,-122.4782551,17z':
-      'https://maps.apple.com/?ll=37.8199286,-122.4782551&q=Golden+Gate+Bridge',
-    'https://www.google.com/maps/dir/Louvre+Museum/Eiffel+Tower/@48.86,2.31,14z/data=!4m2!4m1!3e2':
-      'https://maps.apple.com/?saddr=Louvre+Museum&daddr=Eiffel+Tower&dirflg=w',
-    'https://www.google.com/maps/dir/?api=1&destination=Eiffel+Tower':
-      'https://maps.apple.com/?daddr=Eiffel+Tower',
-    'https://maps.google.com/?q=Eiffel+Tower&ftid=0x0:0x0&entry=gps': 'https://maps.apple.com/?q=Eiffel+Tower',
-  };
-  for (const [from, to] of Object.entries(cases)) assert.equal(applyRules(from), to);
+test('every rule does what its example says', () => {
+  for (const { name, example } of rules) {
+    const [from, to] = example;
+    assert.equal(applyRules(from), to, name);
+  }
 });
 
 test('shortcut rules leave the rest to the web converter', () => {
