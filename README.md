@@ -14,8 +14,8 @@ Paste a `google.com/maps` or `maps.app.goo.gl` link and get an Apple Maps link t
 - 🧭 **Directions**: origin, destination, waypoints and travel mode (driving, walking, transit, cycling)
 - 🔑 **No API key**, no tracking, zero dependencies; runs in Node, browsers, Safari extensions and userscripts
 
-**👉 Try it online: [steven-panxd.github.io/google-apple-maps-converter](https://steven-panxd.github.io/google-apple-maps-converter/)**
-**📱 On iPhone: [get the free shortcut](https://www.icloud.com/shortcuts/37ce6677367a4426b64d2e6b4238278b)**, then tap Share › Open in Apple Maps on any Google Maps link ([step-by-step guide](https://steven-panxd.github.io/google-apple-maps-converter/shortcut/)).
+**👉 Try it online: [maps.xuedo.ng](https://maps.xuedo.ng/)**
+**📱 On iPhone: [get the free shortcut](https://www.icloud.com/shortcuts/37ce6677367a4426b64d2e6b4238278b)**, then tap Share › Open in Apple Maps on any Google Maps link ([step-by-step guide](https://maps.xuedo.ng/shortcut/)).
 
 <p align="center"><img src="docs/demo.gif" width="280" alt="Long-press a Google Maps link, tap Share, then Open in Apple Maps: Apple Maps opens at the Eiffel Tower"></p>
 
@@ -50,7 +50,7 @@ Open Google Maps links in Apple Maps straight from the share sheet:
 1. On your iPhone, open **[the shortcut on iCloud](https://www.icloud.com/shortcuts/37ce6677367a4426b64d2e6b4238278b)** and tap **Add Shortcut**.
 2. On any Google Maps link (Safari, Messages, WhatsApp, WeChat…), tap **Share → Open in Apple Maps**. Run it from the Shortcuts app to convert the link on your clipboard.
 
-Screenshots of every step: **[iPhone shortcut guide](https://steven-panxd.github.io/google-apple-maps-converter/shortcut/)**.
+Screenshots of every step: **[iPhone shortcut guide](https://maps.xuedo.ng/shortcut/)**.
 
 The shortcut expands short links on your phone and hands the full link to the web converter, which opens Apple Maps. Rebuild it with `python3 shortcut/build.py` on a Mac.
 
@@ -162,11 +162,11 @@ Parsing and converting full links works anywhere. Expanding short links from a p
 
 - ⭐ [Star it on GitHub](https://github.com/steven-panxd/google-apple-maps-converter) so other people can find it
 - 🐛 [Report a link that doesn't convert](https://github.com/steven-panxd/google-apple-maps-converter/issues/new?title=Unsupported%20link) (paste the link)
-- 📣 Share the [web converter](https://steven-panxd.github.io/google-apple-maps-converter/) with friends who keep sending Google Maps links to iPhones
+- 📣 Share the [web converter](https://maps.xuedo.ng/) with friends who keep sending Google Maps links to iPhones
 
 ## Roadmap
 
-- [x] [Web converter page](https://steven-panxd.github.io/google-apple-maps-converter/)
+- [x] [Web converter page](https://maps.xuedo.ng/)
 - [ ] Short-link expansion on the web page
 - [x] iOS Shortcut (convert from the share sheet)
 - [ ] Safari extension (iOS and macOS): open Google Maps links in Apple Maps automatically

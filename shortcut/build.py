@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "site" / "Open in Apple Maps.shortcut"
-CONVERTER = "https://steven-panxd.github.io/google-apple-maps-converter/"
+CONVERTER = "https://maps.xuedo.ng/"
 
 
 def action(identifier, **params):
