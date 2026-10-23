@@ -43,32 +43,32 @@
       {
         "@type": "Question",
         "name": "How do I open a Google Maps link in Apple Maps?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Paste the Google Maps link into the converter and tap Open in Apple Maps. The converter reads the place name, coordinates or route from the Google link and builds a maps.apple.com link, which opens in the Apple Maps app on iPhone, iPad and Mac." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Paste the Google Maps link into the converter and tap Open in Apple Maps. On iPhone, the free shortcut adds Share › Open in Apple Maps to any Google Maps link." }
       },
       {
         "@type": "Question",
         "name": "How do I convert an Apple Maps link to Google Maps?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Paste the maps.apple.com link. The converter detects it and gives you a Google Maps link that works on Android, Windows and in any browser." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Paste it into the converter. Apple links are detected and turned into Google Maps links." }
       },
       {
         "@type": "Question",
         "name": "Why do Google Maps links open in Safari instead of Apple Maps on iPhone?",
-        "acceptedAnswer": { "@type": "Answer", "text": "iOS opens google.com/maps links in the Google Maps app or the browser. Converting the link to maps.apple.com makes it open in Apple Maps." }
+        "acceptedAnswer": { "@type": "Answer", "text": "iOS sends google.com/maps links to Google Maps or the browser. A maps.apple.com link opens Apple Maps." }
       },
       {
         "@type": "Question",
         "name": "Can I convert maps.app.goo.gl short links to Apple Maps?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes, with the free iPhone shortcut, which expands short links on your phone. On the web page, open the short link in a browser first and paste the full address." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. The iPhone shortcut opens them directly; on the web page, paste one and follow the three steps shown." }
       },
       {
         "@type": "Question",
         "name": "Do I need an app, an account or an API key?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. The converter is a free web page and an optional iPhone shortcut. There is nothing to sign up for." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. It's free, with nothing to sign up for." }
       },
       {
         "@type": "Question",
         "name": "Can I use the converter from my own app or shortcut?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Open the converter page with ?url= followed by the link, and add &go=1 to jump straight to the converted map. It is also an open-source JavaScript library." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Open the converter with ?url=<link>&go=1, or use the open-source npm library." }
       }
     ]
   }
@@ -86,12 +86,12 @@
   <main>
     <section class="convert" id="convert" aria-labelledby="title">
       <h1 id="title">Google Maps ↔ Apple Maps link converter</h1>
-      <p class="lead">Paste a Google Maps link to open the same place, pin or route in Apple Maps, or an Apple Maps link to get one for Google Maps.</p>
+      <p class="lead">Open any Google Maps place, pin or route in Apple Maps, and back.</p>
 
       <label class="sr-only" for="link">Google Maps or Apple Maps link</label>
       <div class="field">
         <input id="link" type="text" inputmode="url" enterkeyhint="go" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
-          placeholder="Paste a Google Maps or Apple Maps link">
+          placeholder="Paste a map link">
         <button type="button" class="button button-quiet" id="paste-btn" hidden>Paste</button>
       </div>
       <p class="examples">Try:
@@ -105,18 +105,17 @@
 
       <div class="short-help" id="short-help" hidden>
         <h2 class="short-help-title">This is a short link</h2>
-        <p>Short links hide the place until they're opened, and a web page isn't allowed to open them for you. It takes three steps:</p>
+        <p>Web pages can't open short links. Three quick steps:</p>
         <ol>
           <li><a class="button" id="short-open" href="#" target="_blank" rel="noopener">Open the short link ↗</a></li>
-          <li>When the map has loaded, copy the address from the address bar.
+          <li>Copy the address from the address bar.
             <div class="addr" aria-hidden="true">
               <span class="addr-lock">🔒</span><span class="addr-url" id="short-addr">google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=…</span>
             </div>
-            <span class="fine">Click the address bar, then press <kbd>⌘</kbd> <kbd>C</kbd> (or <kbd>Ctrl</kbd> <kbd>C</kbd>).</span>
           </li>
-          <li>Come back here and paste it into the box above.</li>
+          <li>Paste it above.</li>
         </ol>
-        <p class="fine">On iPhone, the <a href="shortcut/">iPhone shortcut</a> opens short links in one tap.</p>
+        <p class="fine">On iPhone, the <a href="shortcut/">shortcut</a> does this in one tap.</p>
       </div>
 
       <article class="answer" id="result" hidden>
@@ -139,7 +138,7 @@
         </div>
       </article>
       <p class="star-ask" id="star-ask" hidden>
-        <span>Saved you a few taps? <a href="https://github.com/steven-panxd/google-apple-maps-converter" id="star-ask-link">★ Star it on GitHub</a></span>
+        <span>Useful? <a href="https://github.com/steven-panxd/google-apple-maps-converter" id="star-ask-link">★ Star it on GitHub</a></span>
         <button type="button" class="star-ask-close" id="star-ask-close" aria-label="Dismiss">×</button>
       </p>
       <p class="another"><a href="./">Convert another link</a></p>
@@ -147,14 +146,14 @@
 
     <section id="iphone" aria-labelledby="iphone-title">
       <h2 id="iphone-title">iPhone shortcut</h2>
-      <p>Add the shortcut once, then tap <strong>Share › Open in Apple Maps</strong> on any Google Maps link in Safari, Messages, WhatsApp or WeChat. It expands <code>maps.app.goo.gl</code> short links too. The first time it runs, allow it to open links.</p>
+      <p>Tap <strong>Share › Open in Apple Maps</strong> on any Google Maps link, short links included.</p>
       <a class="button" href="https://www.icloud.com/shortcuts/37ce6677367a4426b64d2e6b4238278b">Get the iPhone shortcut</a>
-      <p class="fine">Opens in the Shortcuts app. <a href="shortcut/">Step-by-step guide with screenshots</a> · <a href="Open%20in%20Apple%20Maps.shortcut" download>Download the file instead</a></p>
+      <p class="fine"><a href="shortcut/">How it works</a> · <a href="Open%20in%20Apple%20Maps.shortcut" download>Download the file</a></p>
     </section>
 
     <section id="code" aria-labelledby="code-title">
       <h2 id="code-title">Use it in your code</h2>
-      <p>The converter is a small JavaScript library with no dependencies. It runs in Node, browsers, extensions and userscripts.</p>
+      <p>Zero-dependency JavaScript, for Node and the browser.</p>
       <pre><code>npm install google-apple-maps-converter</code></pre>
       <pre><code>import { convert } from 'google-apple-maps-converter';
 
@@ -167,35 +166,36 @@ const { url } = await convert('https://maps.app.goo.gl/…');
       <h2 id="faq-title">Questions</h2>
       <details>
         <summary>How do I convert an Apple Maps link to Google Maps?</summary>
-        <p>Paste the <code>maps.apple.com</code> link above. The converter notices it is an Apple link and gives you a Google Maps link that works on Android, Windows and in any browser.</p>
+        <p>Paste it above. Apple links are detected and turned into Google Maps links.</p>
       </details>
       <details>
         <summary>Why do Google Maps links open in Safari on my iPhone?</summary>
-        <p>iOS opens <code>google.com/maps</code> links in the Google Maps app or in the browser. Converting the link to <code>maps.apple.com</code> makes it open in Apple Maps instead.</p>
+        <p>iOS sends <code>google.com/maps</code> links to Google Maps or the browser. A <code>maps.apple.com</code> link opens Apple Maps.</p>
       </details>
       <details>
         <summary>Can it open maps.app.goo.gl short links?</summary>
-        <p>Yes, with the iPhone shortcut, which expands short links on your phone. On this page, open the short link in your browser first and paste the full address. Links that only carry a place ID, such as <code>?cid=</code> links, have nothing to convert.</p>
+        <p>Yes. The iPhone shortcut opens them directly; on this page, paste one and follow the three steps.</p>
       </details>
       <details>
         <summary>Do I need an app, an account or an API key?</summary>
-        <p>No. It is a free web page and an optional shortcut. There is nothing to sign up for.</p>
+        <p>No. It's free, with nothing to sign up for.</p>
       </details>
       <details>
         <summary>Is my link sent anywhere?</summary>
-        <p>No. Links are converted in your browser and never leave your device. The map preview is loaded from OpenStreetMap.</p>
+        <p>No. Links are converted in your browser. Only the map preview loads from OpenStreetMap.</p>
       </details>
       <details>
         <summary>Can I use it from my own app or shortcut?</summary>
-        <p>Yes. Open this page with <code>?url=</code> and the link, and add <code>&amp;go=1</code> to jump straight to the map. Or use the npm library above.</p>
+        <p>Yes. Open this page with <code>?url=&lt;link&gt;&amp;go=1</code>, or use the npm library.</p>
       </details>
     </section>
   </main>
 
   <footer class="foot">
-    <p><a href="https://github.com/steven-panxd/google-apple-maps-converter">★ Star on GitHub</a> · MIT licence · Made by <a href="https://github.com/steven-panxd">Steven Pan</a> · <a href="https://github.com/steven-panxd/google-apple-maps-converter/issues">Report a link that doesn’t convert</a> · Not affiliated with Google or Apple</p>
+    <p>MIT · <a href="https://github.com/steven-panxd">Steven Pan</a> · <a href="https://github.com/steven-panxd/google-apple-maps-converter/issues">Report a link</a> · Not affiliated with Google or Apple</p>
   </footer>
 
   <script type="module" src="app.js"></script>
+  <script src="motion.js" defer></script>
 </body>
 </html>

@@ -273,6 +273,9 @@ copyBtn.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(openBtn.href);
     copyBtn.textContent = 'Copied';
+    copyBtn.classList.remove('done');
+    void copyBtn.offsetWidth;
+    copyBtn.classList.add('done');
     offerStar();
   } catch {
     copyBtn.textContent = 'Copy failed';

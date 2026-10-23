@@ -195,9 +195,7 @@ kbd { font: 600 0.8125rem/1 var(--mono); padding: 2px 6px; border: 1px solid var
   background: transparent; color: var(--muted); font-size: 1.25rem; line-height: 1; cursor: pointer;
 }
 .star-ask-close:active { background: var(--line); }
-@media (prefers-reduced-motion: no-preference) {
-  .star-ask:not([hidden]) { animation: answer-in 320ms var(--ease-out); }
-}
+
 
 /* Code */
 pre {
@@ -226,9 +224,44 @@ pre + .button { margin-top: 8px; }
 .focused .convert { padding-top: 24px; }
 .focused .another { display: block; margin: 16px 0 0; }
 
-@media (prefers-reduced-motion: no-preference) {
-  .answer.arrive { animation: answer-in 320ms var(--ease-out); }
-  .answer-map .tile { animation: tile-in 400ms ease; }
+/* ---------- Motion: short, quiet, and off for reduced motion ---------- */
+@view-transition { navigation: auto; }
+
+.faq summary, .answer-more summary, .short-help summary { list-style: none; }
+.faq summary::-webkit-details-marker, .answer-more summary::-webkit-details-marker { display: none; }
+.faq summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.faq summary::after, .answer-more summary::before {
+  content: ""; flex: none; width: 7px; height: 7px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg); transition: transform 200ms var(--ease-out);
 }
-@keyframes answer-in { from { opacity: 0; transform: translateY(8px); } }
-@keyframes tile-in { from { opacity: 0; } }
+.answer-more summary { display: inline-flex; align-items: center; gap: 8px; }
+.answer-more summary::before { transform: rotate(-45deg); }
+.faq details[open] summary::after { transform: rotate(-135deg); }
+.answer-more[open] summary::before { transform: rotate(45deg); }
+
+a { transition: color 150ms ease, text-decoration-color 150ms ease; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* First paint: title, intro and field settle in, once. */
+  .js .convert > :is(h1, .lead, .field, .examples, .button) { animation: rise 520ms var(--ease-out) both; }
+  .js .convert > .lead { animation-delay: 60ms; }
+  .js .convert > :is(.field, .button) { animation-delay: 120ms; }
+  .js .convert > .examples { animation-delay: 170ms; }
+
+  /* Sections below the fold, once, as they scroll in (motion.js). */
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out); }
+  .reveal.is-in { opacity: 1; transform: none; }
+
+  /* Things that appear in answer to the visitor. */
+  .answer.arrive, .short-help:not([hidden]), .star-ask:not([hidden]) { animation: rise 320ms var(--ease-out); }
+  .status:not(:empty) { animation: fade 200ms ease; }
+  .answer-map .tile { animation: fade 400ms ease; }
+  .answer.arrive .answer-pin { animation: drop 420ms 120ms var(--ease-out) both; }
+  details[open] > :not(summary) { animation: rise 240ms var(--ease-out); }
+  .button.done { animation: pop 260ms var(--ease-out); }
+}
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes drop { from { opacity: 0; transform: translateY(-14px); } }
+@keyframes pop { 50% { transform: scale(1.04); } }
