@@ -4,7 +4,8 @@
 Flow: share-sheet input (or clipboard) -> first URL -> Expand URL (follows short links)
 -> the regex rules in rules.json, which turn everyday Google Maps links into Apple Maps links
 on the device -> open that in Apple Maps. Anything the rules leave alone goes to the web
-converter with &go=1, which handles every format the library knows.
+converter with &go=1, which handles every format the library knows. Shared text without a link
+(an address, a place name) is searched in Apple Maps.
 
 Usage (macOS): python3 shortcut/build.py   -> writes "site/Open in Apple Maps.shortcut" (signed).
 The file name becomes the shortcut's name when someone imports it.
@@ -23,6 +24,7 @@ CONVERTER = "https://maps.xuedo.ng/"
 RULES = json.loads((ROOT / "shortcut" / "rules.json").read_text())["rules"]
 APPLE = "https://maps.apple.com/"
 BEGINS_WITH = 8
+HAS_ANY_VALUE = 100
 
 
 def action(identifier, **params):
@@ -54,12 +56,20 @@ def new_id():
 def build():
     ids = {name: new_id() for name in ["links", "first", "expand", "encode", "text", "open", "web"]}
     group = new_id()
+    has_link = new_id()
     # Imported shortcuts don't auto-connect actions, so every input is wired explicitly.
     actions = [
         action(
             "is.workflow.actions.detect.link",
             UUID=ids["links"],
             WFInput=text_with("", {"Type": "ExtensionInput"}),
+        ),
+        action(
+            "is.workflow.actions.conditional",
+            GroupingIdentifier=has_link,
+            WFControlFlowMode=0,
+            WFCondition=HAS_ANY_VALUE,
+            WFInput={"Type": "Variable", "Variable": output_of(ids["links"], "URLs")},
         ),
         action(
             "is.workflow.actions.getitemfromlist",
@@ -111,6 +121,11 @@ def build():
         ),
         action("is.workflow.actions.openurl", UUID=ids["web"], WFInput=output_of(ids["text"], "Text")),
         action("is.workflow.actions.conditional", GroupingIdentifier=group, WFControlFlowMode=2),
+        # No link at all, e.g. a shared address: search it in Apple Maps. This Maps action is also
+        # what lets the shortcut show the Apple Maps icon instead of Safari's.
+        action("is.workflow.actions.conditional", GroupingIdentifier=has_link, WFControlFlowMode=1),
+        action("is.workflow.actions.searchmaps", WFInput=text_with("", {"Type": "ExtensionInput"})),
+        action("is.workflow.actions.conditional", GroupingIdentifier=has_link, WFControlFlowMode=2),
     ]
     return {
         "WFWorkflowClientVersion": "2607.0.1",
