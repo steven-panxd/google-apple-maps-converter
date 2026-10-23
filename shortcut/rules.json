@@ -1,0 +1,90 @@
+{
+  "comment": "Regex replacements the shortcut runs, in order, to turn a Google Maps link into a legacy Apple Maps link on the device. Each rule matches the whole link or leaves it alone; anything still not starting with https://maps.apple.com/ afterwards goes to the web converter. test/shortcut-rules.test.js checks every rule against the library. Matching is case-insensitive.",
+  "rules": [
+    {
+      "name": "place with pin",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/place/(?![^#]*[?&]api=1)([^/?#]+)/[^?#]*?!3d(-?\\d+(?:\\.\\d+)?)!4d(-?\\d+(?:\\.\\d+)?)[^#]*$",
+      "replace": "https://maps.apple.com/?ll=$2,$3&q=$1"
+    },
+    {
+      "name": "place at viewport",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/place/(?![^#]*[?&]api=1)(?![-+]?\\d+(?:\\.\\d+)?(?:,|%2C)|[^/?#&]*(?:°|%C2%B0))([^/?#]+)/@(-?(?:[0-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?)),(-?(?:(?:1[0-7]\\d|\\d?\\d)(?:\\.\\d+)?|180(?:\\.0+)?))(?![\\d.])[^#]*$",
+      "replace": "https://maps.apple.com/?ll=$2,$3&q=$1"
+    },
+    {
+      "name": "place by name",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/place/(?![^#]*[?&]api=1)(?![-+]?\\d+(?:\\.\\d+)?(?:,|%2C)|[^/?#&]*(?:°|%C2%B0))([^/?#]+)(?:/(?!@)[^?#]*)?(?:[?#].*)?$",
+      "replace": "https://maps.apple.com/?q=$1"
+    },
+    {
+      "name": "search with pin",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/search/(?![^#]*[?&]api=1)(?![-+]?\\d+(?:\\.\\d+)?(?:,|%2C)|[^/?#&]*(?:°|%C2%B0))([^/?#]+)/[^?#]*?!3d(-?\\d+(?:\\.\\d+)?)!4d(-?\\d+(?:\\.\\d+)?)[^#]*$",
+      "replace": "https://maps.apple.com/?ll=$2,$3&q=$1"
+    },
+    {
+      "name": "search near viewport",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/search/(?![^#]*[?&]api=1)(?![-+]?\\d+(?:\\.\\d+)?(?:,|%2C)|[^/?#&]*(?:°|%C2%B0))([^/?#]+)/@(-?(?:[0-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?)),(-?(?:(?:1[0-7]\\d|\\d?\\d)(?:\\.\\d+)?|180(?:\\.0+)?))(?![\\d.])[^#]*$",
+      "replace": "https://maps.apple.com/?q=$1&sll=$2,$3"
+    },
+    {
+      "name": "search by name",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/search/(?![^#]*[?&]api=1)(?![-+]?\\d+(?:\\.\\d+)?(?:,|%2C)|[^/?#&]*(?:°|%C2%B0))([^/?#]+)/?(?:[?#].*)?$",
+      "replace": "https://maps.apple.com/?q=$1"
+    },
+    {
+      "name": "directions, two stops",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/dir/(?![^#]*[?&]api=1)(?![^?#]*!3e1)(?=[^?#]*!3e([023])|)((?!@|data=|am=)[^/?#]*)/((?!@|data=|am=)[^/?#]+)(?:/(?:@|data=|am=)[^?#]*)?/?(?:[?#].*)?$",
+      "replace": "https://maps.apple.com/?saddr=$2&daddr=$3&dirflg=X$1"
+    },
+    {
+      "name": "directions, one stop",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/dir/(?![^#]*[?&]api=1)(?![^?#]*!3e1)(?=[^?#]*!3e([023])|)((?!@|data=|am=)[^/?#]+)(?:/(?:@|data=|am=)[^?#]*)?/?(?:[?#].*)?$",
+      "replace": "https://maps.apple.com/?daddr=$2&dirflg=X$1"
+    },
+    {
+      "name": "api search",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/search/?\\?(?=(?:[^#]*&)?api=1(?:[&#]|$))(?=(?:[^#]*&)?query=((?![-+]?\\d+(?:\\.\\d+)?(?:,|%2C)|[^&#]*(?:°|%C2%B0))[^&#]+))[^#]*$",
+      "replace": "https://maps.apple.com/?q=$1"
+    },
+    {
+      "name": "api directions",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/dir/?\\?(?=(?:[^#]*&)?api=1(?:[&#]|$))(?![^#]*[?&](?:waypoints=[^&#]|travelmode=bicycling))(?=(?:[^#]*&)?destination=([^&#]+))(?=(?:[^#]*&)?origin=([^&#]*)|)(?=(?:[^#]*&)?travelmode=(driving|walking|transit)(?:[&#]|$)|)[^#]*$",
+      "replace": "https://maps.apple.com/?saddr=$2&daddr=$1&dirflg=X$3"
+    },
+    {
+      "name": "query",
+      "find": "^https?://(?:(?:www\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/?|maps\\.google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})(?:/maps)?/?)\\?(?![^#]*[?&](?:api|saddr|daddr|ll|sll|center)=)(?=(?:[^#]*&)?(?:q|query)=((?![-+]?\\d+(?:\\.\\d+)?(?:,|%2C)|[^&#]*(?:°|%C2%B0))[^&#]+))[^#]*$",
+      "replace": "https://maps.apple.com/?q=$1"
+    },
+    {
+      "name": "map view",
+      "find": "^https?://(?:www\\.|maps\\.)?google\\.(?:[a-z]{2,3}|com?\\.[a-z]{2})/maps/@(-?(?:[0-8]?\\d(?:\\.\\d+)?|90(?:\\.0+)?)),(-?(?:(?:1[0-7]\\d|\\d?\\d)(?:\\.\\d+)?|180(?:\\.0+)?))(?![\\d.])(?![^?#]*!3d)(?![^#]*[?&](?:api|q|query|ll|center|saddr|daddr)=)[^#]*$",
+      "replace": "https://maps.apple.com/?ll=$1,$2&q=$1,$2"
+    },
+    {
+      "name": "drive",
+      "find": "^(https://maps\\.apple\\.com/\\?.*&dirflg=)X(?:0|driving)$",
+      "replace": "$1d"
+    },
+    {
+      "name": "walk",
+      "find": "^(https://maps\\.apple\\.com/\\?.*&dirflg=)X(?:2|walking)$",
+      "replace": "$1w"
+    },
+    {
+      "name": "transit",
+      "find": "^(https://maps\\.apple\\.com/\\?.*&dirflg=)X(?:3|transit)$",
+      "replace": "$1r"
+    },
+    {
+      "name": "no mode",
+      "find": "^(https://maps\\.apple\\.com/\\?.*)&dirflg=X$",
+      "replace": "$1"
+    },
+    {
+      "name": "no origin",
+      "find": "^(https://maps\\.apple\\.com/\\?)saddr=&",
+      "replace": "$1"
+    }
+  ]
+}

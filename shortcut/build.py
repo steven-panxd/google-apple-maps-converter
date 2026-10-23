@@ -2,11 +2,14 @@
 """Build the "Open in Apple Maps" iOS Shortcut.
 
 Flow: share-sheet input (or clipboard) -> first URL -> Expand URL (follows short links)
--> URL-encode -> open the web converter with &go=1, which redirects to Apple Maps.
+-> the regex rules in rules.json, which turn everyday Google Maps links into Apple Maps links
+on the device -> open that in Apple Maps. Anything the rules leave alone goes to the web
+converter with &go=1, which handles every format the library knows.
 
 Usage (macOS): python3 shortcut/build.py   -> writes "site/Open in Apple Maps.shortcut" (signed).
 The file name becomes the shortcut's name when someone imports it.
 """
+import json
 import plistlib
 import subprocess
 import sys
@@ -17,6 +20,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "site" / "Open in Apple Maps.shortcut"
 CONVERTER = "https://maps.xuedo.ng/"
+RULES = json.loads((ROOT / "shortcut" / "rules.json").read_text())["rules"]
+APPLE = "https://maps.apple.com/"
+BEGINS_WITH = 8
 
 
 def action(identifier, **params):
@@ -41,8 +47,13 @@ def output_of(output_uuid, output_name):
     return {"WFSerializationType": "WFTextTokenAttachment", "Value": output(output_uuid, output_name)}
 
 
+def new_id():
+    return str(uuid.uuid4()).upper()
+
+
 def build():
-    ids = {name: str(uuid.uuid4()).upper() for name in ["links", "first", "expand", "encode", "text", "open"]}
+    ids = {name: new_id() for name in ["links", "first", "expand", "encode", "text", "open", "web"]}
+    group = new_id()
     # Imported shortcuts don't auto-connect actions, so every input is wired explicitly.
     actions = [
         action(
@@ -57,6 +68,36 @@ def build():
             WFInput=output_of(ids["links"], "URLs"),
         ),
         action("is.workflow.actions.url.expand", UUID=ids["expand"], URL=text_with("", output(ids["first"], "Item from List"))),
+    ]
+    link = output(ids["expand"], "Expanded URL")
+    for rule in RULES:
+        rule_id = new_id()
+        actions.append(
+            action(
+                "is.workflow.actions.text.replace",
+                UUID=rule_id,
+                CustomOutputName=rule["name"],
+                WFInput=text_with("", link),
+                WFReplaceTextFind=rule["find"],
+                WFReplaceTextReplace=rule["replace"],
+                WFReplaceTextRegularExpression=True,
+                WFReplaceTextCaseSensitive=False,
+            )
+        )
+        link = output(rule_id, rule["name"])
+    actions += [
+        # Converted on the device: straight to Apple Maps, no website involved.
+        action(
+            "is.workflow.actions.conditional",
+            GroupingIdentifier=group,
+            WFControlFlowMode=0,
+            WFCondition=BEGINS_WITH,
+            WFConditionalActionString=APPLE,
+            WFInput={"Type": "Variable", "Variable": {"WFSerializationType": "WFTextTokenAttachment", "Value": link}},
+        ),
+        action("is.workflow.actions.openurl", UUID=ids["open"], WFInput=text_with("", link)),
+        action("is.workflow.actions.conditional", GroupingIdentifier=group, WFControlFlowMode=1),
+        # Everything else: the web converter knows every format the library does.
         action(
             "is.workflow.actions.urlencode",
             UUID=ids["encode"],
@@ -68,7 +109,8 @@ def build():
             UUID=ids["text"],
             WFTextActionText=text_with(f"{CONVERTER}?url=", output(ids["encode"], "URL Encoded Text"), "&go=1"),
         ),
-        action("is.workflow.actions.openurl", UUID=ids["open"], WFInput=output_of(ids["text"], "Text")),
+        action("is.workflow.actions.openurl", UUID=ids["web"], WFInput=output_of(ids["text"], "Text")),
+        action("is.workflow.actions.conditional", GroupingIdentifier=group, WFControlFlowMode=2),
     ]
     return {
         "WFWorkflowClientVersion": "2607.0.1",
