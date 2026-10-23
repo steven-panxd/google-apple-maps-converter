@@ -5,7 +5,7 @@
 Three ways to use it:
 
 - [Web converter](https://maps.xuedo.ng/): paste a Google Maps or Apple Maps link and open the converted link. Add `?url=<link>&go=1` to redirect straight to the converted map.
-- [iPhone shortcut](https://maps.xuedo.ng/shortcut/): adds "Open in Apple Maps" to the iOS share sheet; share any Google Maps link to it. Get it: https://www.icloud.com/shortcuts/8c1cc1bb94e14469a7711dfb46267d7a
+- [iPhone shortcut](https://maps.xuedo.ng/shortcut/): adds "Open in Apple Maps" to the iOS share sheet; share any Google Maps link to it. Get it: https://www.icloud.com/shortcuts/cd2c1b51a87649f0a3bf9f0e273020c0
 - [npm library](https://www.npmjs.com/package/google-apple-maps-converter): zero-dependency JavaScript for Node and browsers. `npm install google-apple-maps-converter`, then `const { url } = await convert(link)`. `appleFormat: 'auto'` picks classic Apple Maps links for iPhones older than iOS 18.4.
 
 ## Docs

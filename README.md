@@ -11,20 +11,20 @@
 <p align="center"><img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/docs/demo.gif" width="280" alt="Long-press a Google Maps link, tap Share, then Open in Apple Maps: Apple Maps opens at the Eiffel Tower"></p>
 
 <p align="center">
-  <a href="https://www.icloud.com/shortcuts/8c1cc1bb94e14469a7711dfb46267d7a"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
+  <a href="https://www.icloud.com/shortcuts/cd2c1b51a87649f0a3bf9f0e273020c0"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
   <br>
   or paste a link at <a href="https://maps.xuedo.ng/"><b>maps.xuedo.ng</b></a>
 </p>
 
 ## How do I open a Google Maps link in Apple Maps on iPhone?
 
-1. Open **[the shortcut](https://www.icloud.com/shortcuts/8c1cc1bb94e14469a7711dfb46267d7a)** on your iPhone and tap **Add Shortcut**.
+1. Open **[the shortcut](https://www.icloud.com/shortcuts/cd2c1b51a87649f0a3bf9f0e273020c0)** on your iPhone and tap **Add Shortcut**.
 2. Long-press any Google Maps link (Messages, WhatsApp, WeChat, Mail, Safari), tap **Share…**, then **Open in Apple Maps**.
 3. The first time, iOS asks to let the shortcut open the link. Tap **Always Allow**.
 
 Tested on iOS 26. Not in your share sheet? Open the Shortcuts app once, or scroll the share sheet and tap **Edit Actions** to add it to your favourites. Full guide with screenshots: **[maps.xuedo.ng/shortcut](https://maps.xuedo.ng/shortcut/)**.
 
-**Privacy:** no account and no tracking. The shortcut opens maps.xuedo.ng, a static page that converts the link in Safari on your phone; nothing is stored.
+**Privacy:** the shortcut converts places, pins, searches and routes on your iPhone and opens Apple Maps directly. No server, no account, no tracking. Only rarer links (cycling routes, routes with stops in between) fall back to [maps.xuedo.ng](https://maps.xuedo.ng/), a static page that converts them in Safari on your phone.
 
 ## Why?
 

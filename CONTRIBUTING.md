@@ -13,10 +13,10 @@ npm test
 | `src/` | The library (the only folder published to npm) |
 | `test/` | Unit tests, run with Node's built-in test runner |
 | `site/` | The web converter and the shortcut guide, deployed to GitHub Pages at maps.xuedo.ng |
-| `shortcut/` | `build.py` generates and signs the iPhone shortcut (macOS) |
+| `shortcut/` | `rules.json`, the regex rules the shortcut runs on the phone, and `build.py`, which generates and signs the shortcut (macOS) |
 | `worker/` | Optional Cloudflare Worker that expands short links for the web page (not deployed) |
 
-When you change parsing or link building, add a test with the real link that prompted it.
+When you change parsing or link building, add a test with the real link that prompted it. `test/shortcut-rules.test.js` checks the shortcut's rules against the library, so a rule can't drift from it.
 
 ## Ideas
 
