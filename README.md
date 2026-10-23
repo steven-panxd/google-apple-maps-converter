@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.png" width="96" height="96" alt="Maps Link Converter icon: a red location pin and a dotted route to a blue navigation arrow"></p>
+
 # Google Maps ↔ Apple Maps Link Converter
 
 **Convert Google Maps links to Apple Maps links, and Apple Maps links to Google Maps links.**

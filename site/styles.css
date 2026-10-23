@@ -68,7 +68,8 @@ button, .button, summary, .top nav a {
 }
 
 .top { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; padding-bottom: 20px; }
-.name { font-weight: 600; color: var(--ink); text-decoration: none; }
+.name { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.name img { border-radius: 6px; }
 .top nav { display: flex; gap: 20px; }
 .top nav a { color: var(--ink); text-decoration: none; }
 
