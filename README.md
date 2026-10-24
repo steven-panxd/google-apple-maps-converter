@@ -8,7 +8,7 @@
 [![npm](https://img.shields.io/npm/v/google-apple-maps-converter)](https://www.npmjs.com/package/google-apple-maps-converter)
 [![license](https://img.shields.io/github/license/steven-panxd/google-apple-maps-converter)](LICENSE)
 
-<p align="center"><img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/docs/demo.gif" width="280" alt="Long-press a Google Maps link, tap Share, then Open in Apple Maps: Apple Maps opens at the Eiffel Tower"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/docs/demo.gif" width="280" alt="A Google Maps link in Messages opens in Google Maps; tap Share, then Open in Apple Maps, and Apple Maps shows the same walking route"></p>
 
 <p align="center">
   <a href="https://www.icloud.com/shortcuts/b1bf1dce8a7543c9bdd21148cc95735b"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
