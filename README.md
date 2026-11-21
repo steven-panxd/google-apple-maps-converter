@@ -13,7 +13,7 @@
 <p align="center">
   <a href="https://www.icloud.com/shortcuts/b1bf1dce8a7543c9bdd21148cc95735b"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
   <br>
-  or paste a link at <a href="https://maps.xuedo.ng/"><b>maps.xuedo.ng</b></a>
+  or paste a link at <a href="https://maps.xuedo.ng/"><b>maps.xuedo.ng</b></a> · also on <a href="https://routinehub.co/shortcut/27153/">RoutineHub</a>
 </p>
 
 ## How do I open a Google Maps link in Apple Maps on iPhone?
