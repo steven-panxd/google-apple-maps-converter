@@ -11,7 +11,7 @@
 <p align="center"><img src="https://raw.githubusercontent.com/steven-panxd/google-apple-maps-converter/main/docs/demo.gif" width="280" alt="A Google Maps link in Messages opens in Google Maps; tap Share, then Open in Apple Maps, and Apple Maps shows the same walking route"></p>
 
 <p align="center">
-  <a href="https://www.icloud.com/shortcuts/b1bf1dce8a7543c9bdd21148cc95735b"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-111111?style=for-the-badge" alt="Get the iPhone shortcut"></a>
+  <a href="https://www.icloud.com/shortcuts/b1bf1dce8a7543c9bdd21148cc95735b"><img src="https://img.shields.io/badge/Get_the_iPhone_shortcut-0B6BE0?style=for-the-badge&logo=apple&logoColor=white" alt="Get the iPhone shortcut"></a>
   <br>
   or paste a link at <a href="https://maps.xuedo.ng/"><b>maps.xuedo.ng</b></a> · also on <a href="https://routinehub.co/shortcut/27153/">RoutineHub</a>
 </p>
